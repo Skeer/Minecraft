@@ -1,4 +1,5 @@
 # Ignore compilation data and binaries #
 ########################################
-obj
-bin
+obj/
+bin/
+*.suo
