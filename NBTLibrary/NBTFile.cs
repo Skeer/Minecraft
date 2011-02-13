@@ -13,7 +13,6 @@ namespace NBTLibrary
         public static NBTFile Open(string path)
         {
             NBTFile file = new NBTFile(path);
-            //parse
             return file;
         }
 
@@ -31,6 +30,76 @@ namespace NBTLibrary
                 File = new Tag();
                 File.Type = TagType.Compound;
                 ParseTag(File);
+            }
+        }
+
+        public void Save(string path)
+        {
+            Stream.SetLength(0);
+            SaveTag(File);
+            using (GZipStream gStream = new GZipStream(new FileStream(path, FileMode.Create), CompressionMode.Compress))
+            {
+                Stream.CopyTo(gStream);
+                gStream.Flush();
+            }
+        }
+
+        private void SaveTag(Tag tag, bool IsList = false)
+        {
+            Stream.WriteTag(tag.Type);
+            if (tag.Type != TagType.End)
+            {
+                if (!IsList)
+                {
+                    Stream.WriteString(tag.Name);
+                }
+                switch (tag.Type)
+                {
+                    case TagType.Byte:
+                        Stream.WriteByte((byte)tag.Payload);
+                        break;
+                    case TagType.ByteArray:
+                        byte[] payload = (byte[])tag.Payload;
+                        Stream.WriteInt(payload.Length);
+                        foreach (byte b in payload)
+                        {
+                            Stream.WriteByte(b);
+                        }
+                        break;
+                    case TagType.Compound:
+                        List<Tag> pload = (List<Tag>)tag.Payload;
+                        foreach (Tag t in pload)
+                        {
+                            SaveTag(t);
+                        }
+                        break;
+                    case TagType.Double:
+                        Stream.WriteDouble((double)tag.Payload);
+                        break;
+                    case TagType.Float:
+                        Stream.WriteFloat((float)tag.Payload);
+                        break;
+                    case TagType.Int:
+                        Stream.WriteInt((int)tag.Payload);
+                        break;
+                    case TagType.List:
+                        Tag[] load = (Tag[]) tag.Payload;
+                        Stream.WriteInt(load.Length);
+                        foreach (Tag t in load)
+                        {
+                            SaveTag(t, true);
+                        }
+                        break;
+                    case TagType.Long:
+                        Stream.WriteLong((long)tag.Payload);
+                        break;
+                    case TagType.Short:
+                        Stream.WriteShort((short)tag.Payload);
+                        break;
+                    case TagType.String:
+                        Stream.WriteString((string)tag.Payload);
+                        break;
+                }
             }
         }
 
@@ -107,10 +176,6 @@ namespace NBTLibrary
                         break;
                 }
             }
-        }
-
-        public void Save(string path)
-        {
         }
 
         public void Dispose()

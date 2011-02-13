@@ -8,7 +8,7 @@ namespace NBTLibrary
     {
         internal new byte ReadByte()
         {
-            return (byte) base.ReadByte();
+            return (byte)base.ReadByte();
         }
 
         internal TagType ReadTag()
@@ -73,6 +73,53 @@ namespace NBTLibrary
             Read(buffer, 0, buffer.Length);
             ReverseBytes(buffer);
             return BitConverter.ToInt64(buffer, 0);
+        }
+
+        internal void WriteString(string s)
+        {
+            byte[] buffer = UTF8Encoding.UTF8.GetBytes(s);
+            WriteShort((short)buffer.Length);
+            Write(buffer, 0, buffer.Length);
+        }
+
+        internal void WriteShort(short s)
+        {
+            byte[] buffer = BitConverter.GetBytes(s);
+            ReverseBytes(buffer);
+            Write(buffer, 0, buffer.Length);
+        }
+
+        internal void WriteInt(int i)
+        {
+            byte[] buffer = BitConverter.GetBytes(i);
+            ReverseBytes(buffer);
+            Write(buffer, 0, buffer.Length);
+        }
+
+        internal void WriteTag(TagType type)
+        {
+            WriteByte((byte)type);
+        }
+
+        internal void WriteDouble(double d)
+        {
+            byte[] buffer = BitConverter.GetBytes(d);
+            ReverseBytes(buffer);
+            Write(buffer, 0, buffer.Length);
+        }
+
+        internal void WriteFloat(float f)
+        {
+            byte[] buffer = BitConverter.GetBytes(f);
+            ReverseBytes(buffer);
+            Write(buffer, 0, buffer.Length);
+        }
+
+        internal void WriteLong(long l)
+        {
+            byte[] buffer = BitConverter.GetBytes(l);
+            ReverseBytes(buffer);
+            Write(buffer, 0, buffer.Length);
         }
     }
 }
