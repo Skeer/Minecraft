@@ -22,8 +22,8 @@ namespace Minecraft.Net
         public double X { get; set; }
         public double Y { get; set; }
         public double Z { get; set; }
-        public double Yaw { get; set; }
-        public double Pitch { get; set; }
+        public float Yaw { get; set; }
+        public float Pitch { get; set; }
 
         public MinecraftClient(Socket client)
         {
@@ -165,8 +165,8 @@ namespace Minecraft.Net
                 Z = (double)pos[2].Payload;
 
                 List<Tag> rotation = (List<Tag>)file.FindPayload("Rotation");
-                Yaw = (double)rotation[0].Payload;
-                Pitch = (double)rotation[1].Payload;
+                Yaw = (float)rotation[0].Payload;
+                Pitch = (float)rotation[1].Payload;
             }
         }
     }
