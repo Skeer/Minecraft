@@ -7,23 +7,25 @@ using Minecraft.Handlers;
 using System.Timers;
 using NBTLibrary;
 using System.Collections.Generic;
+using Minecraft.Entities;
+using Minecraft.Map;
 
 namespace Minecraft.Net
 {
     class MinecraftClient : IDisposable
     {
         private static Logger Log = new Logger(typeof(MinecraftClient));
+        private bool Disposed = false;
         private byte[] Buffer = new byte[1500];
         private Socket Client;
         private string EndPoint;
         private MinecraftPacketStream Received = new MinecraftPacketStream();
         private Timer KeepAliveTimer = new Timer(30000);
         private Timer ConnectionTimer = new Timer(60000);
-        public double X { get; set; }
-        public double Y { get; set; }
-        public double Z { get; set; }
-        public float Yaw { get; set; }
-        public float Pitch { get; set; }
+
+        public string Username { get; set; }
+        public string Hash { get; set; }
+        public Player Player { get; set; }
 
         public MinecraftClient(Socket client)
         {
@@ -70,7 +72,7 @@ namespace Minecraft.Net
                     long position = Received.Position;
                     byte id = Received.ReadByte();
 
-                    IPacketHandler handler = MinecraftPacketRegistry.Instance.GetHandler(id);
+                    IPacketHandler handler = MinecraftServer.Instance.PacketRegistry.GetHandler(id);
 
                     if (handler == null)
                     {
@@ -107,20 +109,19 @@ namespace Minecraft.Net
 
                     ProcessReceived();
                     Log.Info("Received {0} bytes.", length);
-                    // TODO: Check for stream issues
-
 
                     Client.BeginReceive(Buffer, 0, Buffer.Length, SocketFlags.None, OnReceive, null);
                 }
                 else
                 {
-                    throw new Exception();
+                    Log.Info("Client disconnected from {0}.", EndPoint);
+                    Dispose();
                 }
 
             }
-            catch
+            catch(Exception e)
             {
-                Log.Info("Client disconnected from {0}.", EndPoint);
+                Log.Error(e, "Client disconnected from {0}.", EndPoint);
                 Dispose();
             }
         }
@@ -140,12 +141,51 @@ namespace Minecraft.Net
 
         public void Dispose()
         {
-            KeepAliveTimer.Dispose();
-            ConnectionTimer.Dispose();
-            Client.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
-        public string Username { get; set; }
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!Disposed)
+            {
+                if (disposing)
+                {
+                    if (KeepAliveTimer != null)
+                    {
+                        KeepAliveTimer.Dispose();
+                    }
+
+                    if (ConnectionTimer != null)
+                    {
+                        ConnectionTimer.Dispose();
+                    }
+
+                    if (Client != null)
+                    {
+                        Client.Dispose();
+                    }
+
+                    if (Received != null)
+                    {
+                        Received.Dispose();
+                    }
+
+                    //Remove client for Server's client list?
+                }
+
+                Received = null;
+                KeepAliveTimer = null;
+                ConnectionTimer = null;
+                Client = null;
+                Disposed = true;
+            }
+        }
+
+        ~MinecraftClient()
+        {
+            Dispose(false);
+        }
 
         public void ResetConnectionTimer()
         {
@@ -153,21 +193,23 @@ namespace Minecraft.Net
             ConnectionTimer.Start();
         }
 
-        public string Hash { get; set; }
-
-        public void LoadConfiguration()
+        public void Load()
         {
-            using (NBTFile file = NBTFile.Open(MinecraftServer.Instance.Path + "Players/" + Username + ".dat"))
-            {
-                List<Tag> pos = (List<Tag>) file.FindPayload("Pos");
-                X = (double)pos[0].Payload;
-                Y = (double)pos[1].Payload;
-                Z = (double)pos[2].Payload;
+            Player = new Player(Username);
 
-                List<Tag> rotation = (List<Tag>)file.FindPayload("Rotation");
-                Yaw = (float)rotation[0].Payload;
-                Pitch = (float)rotation[1].Payload;
+            //SEND Beginning Chunks
+            //NOTE: Dunno if this is correct.
+            List<Chunk> chunks = MinecraftServer.Instance.ChunkManager.GetChunks(new PointInt() { X = (int)Player.Position.X / 16, Z = (int)Player.Position.Z / 16 });
+            foreach (Chunk c in chunks)
+            {
+                //TODO: Probably be better to not pass the whole chunk........
+                Client.Send(MinecraftPacketCreator.GetPreChunk(c));
+                Client.Send(MinecraftPacketCreator.GetMapChunk(c));
             }
+
+            Client.Send(MinecraftPacketCreator.GetSpawnPosition(MinecraftServer.Instance.SpawnPosition));
+
+            Client.Send(MinecraftPacketCreator.GetPositionLook(Player.Position, Player.Rotation, Player.OnGround));
         }
     }
 }

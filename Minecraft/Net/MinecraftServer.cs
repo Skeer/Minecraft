@@ -1,11 +1,12 @@
-﻿using System.IO;
-using Minecraft.Utilities;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Net.Sockets;
+using System.IO;
 using System.Net;
+using System.Net.Sockets;
 using System.Threading;
-using System.IO.Compression;
+using Minecraft.Map;
+using Minecraft.Packet;
+using Minecraft.Utilities;
 using NBTLibrary;
 
 namespace Minecraft.Net
@@ -14,36 +15,53 @@ namespace Minecraft.Net
     {
         private static Logger Log = new Logger(typeof(MinecraftServer));
         private static MinecraftServer _Instance = new MinecraftServer();
-        private int Port = 25565;
-        private List<string> Administrators = new List<string>();
-        private Dictionary<string, string> Configuration = new Dictionary<string, string>();
-        private Socket Server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        private AutoResetEvent ResetEvent = new AutoResetEvent(true);
-        private FileSystemWatcher Watcher;
-        public long RandomSeed { get; set; }
-
+        private bool Disposed = false;
         private byte _Dimension = 0; //Maybe do this client wise?
-        
-        public byte Dimension
-        {
-            get { return _Dimension; }
-            set { _Dimension = value; }
-        }
-
+        private int Port = 25565;
+        private int _Version = 8;
         private string _Path = @"C:\world\";
-
-        public string Path
-        {
-            get { return _Path; }
-            set { _Path = value; }
-        }
-
+        private uint _Entity = 0;
+        private AutoResetEvent ResetEvent = new AutoResetEvent(true);
+        private Dictionary<string, string> Configuration = new Dictionary<string, string>();
+        private FileSystemWatcher Watcher;
+        private List<string> Administrators = new List<string>();
+        private MinecraftAuthentication _Authentication = MinecraftAuthentication.Online;
+        private Socket Server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
         public static MinecraftServer Instance
         {
             get { return _Instance; }
             set { _Instance = value; }
         }
+        public byte Dimension
+        {
+            get { return _Dimension; }
+            set { _Dimension = value; }
+        }
+        public int Version
+        {
+            get { return _Version; }
+            set { _Version = value; }
+        }
+        public long RandomSeed { get; set; }
+        public string Path
+        {
+            get { return _Path; }
+            set { _Path = value; }
+        }
+        public uint Entity
+        {
+            get { return _Entity; }
+            set { _Entity = value; }
+        }
+        public ChunkManager ChunkManager { get; set; }
+        public MinecraftAuthentication Authentication
+        {
+            get { return _Authentication; }
+            set { _Authentication = value; }
+        }
+        public MinecraftPacketRegistry PacketRegistry { get; set; }
+        public PointInt SpawnPosition { get; set; }
 
         private MinecraftServer()
         { }
@@ -58,14 +76,16 @@ namespace Minecraft.Net
             Watcher = new FileSystemWatcher(_Path, "session.lock");
             Watcher.Changed += new FileSystemEventHandler(Watcher_Changed);
 
-            //level.dat
-            // TODO: Path.Join?
             using (NBTFile levelFile = NBTFile.Open(_Path + "level.dat"))
             {
+                SpawnPosition = new PointInt() { X = (int)levelFile.FindPayload("SpawnX"), Y = (short)(int)levelFile.FindPayload("SpawnY"), Z = (int)levelFile.FindPayload("SpawnZ") };
+
                 RandomSeed = (long)levelFile.FindPayload("RandomSeed");
             }
 
-            //object seed = levelFile.FindPayload("RandomSeed", levelFile.File);
+            PacketRegistry = new MinecraftPacketRegistry();
+
+            ChunkManager = new ChunkManager();
 
             //Socket
             try
@@ -127,7 +147,7 @@ namespace Minecraft.Net
                             }
                             else if (splitted[0].ToLower() == "auth" || splitted[0].ToLower() == "authentication")
                             {
-                                _Authentication = (MinecraftAuthentication)Enum.Parse(typeof(MinecraftAuthentication), splitted[1]);
+                                _Authentication = (MinecraftAuthentication)Enum.Parse(typeof(MinecraftAuthentication), splitted[1], true);
                             }
                             else if (splitted[0].ToLower() == "version")
                             {
@@ -198,7 +218,47 @@ namespace Minecraft.Net
 
         public void Dispose()
         {
-            Logger.Writer.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!Disposed)
+            {
+                if (disposing)
+                {
+                    if (Logger.Writer != null)
+                    {
+                        Logger.Writer.Dispose();
+                    }
+
+                    if (Server != null)
+                    {
+                        Server.Dispose();
+                    }
+
+                    if (ResetEvent != null)
+                    {
+                        ResetEvent.Dispose();
+                    }
+                    if(Watcher != null)
+                    {
+                        Watcher.Dispose();
+                    }
+                }
+
+                Watcher = null;
+                ResetEvent = null;
+                Server = null;
+                Logger.Writer = null;
+                Disposed = true;
+            }
+        }
+
+        ~MinecraftServer()
+        {
+            Dispose(false);
         }
 
         private void OnAccept(IAsyncResult result)
@@ -211,30 +271,6 @@ namespace Minecraft.Net
             new MinecraftClient(client);
 
             ResetEvent.Set();
-        }
-
-        private MinecraftAuthentication _Authentication = MinecraftAuthentication.Online;
-
-        public MinecraftAuthentication Authentication
-        {
-            get { return _Authentication; }
-            set { _Authentication = value; }
-        }
-
-        private int _Version = 8;
-
-        public int Version
-        {
-            get { return _Version; }
-            set { _Version = value; }
-        }
-
-        private uint _Entity = 0;
-
-        public uint Entity
-        {
-            get { return _Entity; }
-            set { _Entity = value; }
         }
     }
 }

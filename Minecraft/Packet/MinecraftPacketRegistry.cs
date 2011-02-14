@@ -5,18 +5,11 @@ namespace Minecraft.Packet
 {
     class MinecraftPacketRegistry
     {
-        private MinecraftPacketRegistry()
+        private Dictionary<byte, IPacketHandler> Handlers = new Dictionary<byte, IPacketHandler>();
+
+        public MinecraftPacketRegistry()
         {
             ReloadHandlers();
-        }
-
-        private Dictionary<byte, IPacketHandler> Handlers = new Dictionary<byte, IPacketHandler>();
-        private static MinecraftPacketRegistry _Instance = new MinecraftPacketRegistry();
-
-        public static MinecraftPacketRegistry Instance
-        {
-            get { return _Instance; }
-            set { _Instance = value; }
         }
 
         public IPacketHandler GetHandler(byte id)
@@ -37,7 +30,8 @@ namespace Minecraft.Packet
 
             Handlers.Add((byte)MinecraftOpcode.KeepAlive, new KeepAliveHandler());
             Handlers.Add((byte)MinecraftOpcode.LoginRequest, new LoginRequestHandler());
-            Handlers.Add((byte)HandshakePacketHandler.Opcode, new HandshakePacketHandler());
+            Handlers.Add((byte)MinecraftOpcode.Handshake, new HandshakePacketHandler());
+            Handlers.Add((byte)MinecraftOpcode.PlayerPositionLook, new PlayerPositionLookHandler());
         }
     }
 }

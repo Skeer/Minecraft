@@ -6,8 +6,6 @@ namespace Minecraft.Handlers
 {
     class HandshakePacketHandler : IPacketHandler
     {
-        public static MinecraftOpcode Opcode = MinecraftOpcode.Handshake;
-
         public bool HandlePacket(MinecraftClient client, MinecraftPacketStream stream)
         {
             if (stream.Length - stream.Position >= 2)

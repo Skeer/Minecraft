@@ -9,6 +9,7 @@ namespace NBTLibrary
     {
         private NBTStream Stream = new NBTStream();
         public Tag File;
+        private bool Disposed = false;
 
         public static NBTFile Open(string path)
         {
@@ -83,7 +84,7 @@ namespace NBTLibrary
                         Stream.WriteInt((int)tag.Payload);
                         break;
                     case TagType.List:
-                        Tag[] load = (Tag[]) tag.Payload;
+                        Tag[] load = (Tag[])tag.Payload;
                         Stream.WriteInt(load.Length);
                         foreach (Tag t in load)
                         {
@@ -180,7 +181,24 @@ namespace NBTLibrary
 
         public void Dispose()
         {
-            Stream.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!Disposed)
+            {
+                if (disposing)
+                {
+                    if (Stream != null)
+                    {
+                        Stream.Dispose();
+                    }
+                }
+                Stream = null;
+                Disposed = true;
+            }
         }
 
         public object FindPayload(string name, Tag tag = null, bool IsList = false)
@@ -221,6 +239,11 @@ namespace NBTLibrary
             }
 
             return null;
+        }
+
+        ~NBTFile()
+        {
+            Dispose(false);
         }
     }
 }

@@ -35,14 +35,15 @@ namespace Minecraft.Handlers
 
                                             if (MinecraftServer.Instance.Authentication == MinecraftAuthentication.Online)
                                             {
+                                                //REFRACTOR?
                                                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://www.minecraft.net/game/checkserver.jsp?user=" + username + "&serverId=" + client.Hash);
                                                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                                                 byte[] buffer = new byte[3];
-                                                response.GetResponseStream().Read(buffer, 0, 3);
+                                                response.GetResponseStream().Read(buffer, 0, buffer.Length);
                                                 if (UTF8Encoding.UTF8.GetString(buffer) == "YES")
                                                 {
                                                     client.Send(MinecraftPacketCreator.GetLoginRequest());
-                                                    client.LoadConfiguration();
+                                                    client.Load();
                                                     return true;
                                                 }
                                                 else
@@ -53,7 +54,7 @@ namespace Minecraft.Handlers
                                             else if (MinecraftServer.Instance.Authentication == MinecraftAuthentication.Offline)
                                             {
                                                 client.Send(MinecraftPacketCreator.GetLoginRequest());
-                                                client.LoadConfiguration();
+                                                client.Load();
                                                 return true;
                                             }
                                             else if (MinecraftServer.Instance.Authentication == MinecraftAuthentication.Password)

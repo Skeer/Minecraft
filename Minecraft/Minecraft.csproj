@@ -40,11 +40,23 @@
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="zlib.net, Version=1.0.3.0, Culture=neutral, PublicKeyToken=47d7877cb3620160">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\zlib.net.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Entities\IEntity.cs" />
+    <Compile Include="Entities\Player.cs" />
+    <Compile Include="Entities\Rotation.cs" />
+    <Compile Include="Handlers\PlayerPositionLookHandler.cs" />
+    <Compile Include="Map\Chunk.cs" />
+    <Compile Include="Map\ChunkManager.cs" />
     <Compile Include="Handlers\HandshakePacketHandler.cs" />
     <Compile Include="Handlers\IPacketHandler.cs" />
     <Compile Include="Handlers\LoginRequestHandler.cs" />
+    <Compile Include="Map\PointDouble.cs" />
+    <Compile Include="Map\PointInt.cs" />
     <Compile Include="Net\MinecraftAuthentication.cs" />
     <Compile Include="Net\MinecraftClient.cs" />
     <Compile Include="Net\MinecraftServer.cs" />
@@ -55,6 +67,7 @@
     <Compile Include="Packet\MinecraftPacketStream.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utilities\Base36.cs" />
     <Compile Include="Utilities\Logger.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -68,6 +81,9 @@
       <Project>{CCD4044B-0034-4670-BCB9-22EA11A716F8}</Project>
       <Name>NBTLibrary</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="zlib.net.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
