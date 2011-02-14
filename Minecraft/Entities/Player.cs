@@ -6,7 +6,7 @@ using System;
 
 namespace Minecraft.Entities
 {
-    class Player : IEntity
+    public class Player : IEntity
     {
         public Rotation Rotation { get; set; }
         public bool OnGround { get; set; }

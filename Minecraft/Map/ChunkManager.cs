@@ -5,7 +5,7 @@ using Minecraft.Net;
 
 namespace Minecraft.Map
 {
-    class ChunkManager
+    public class ChunkManager
     {
         private Dictionary<PointInt, Chunk> Chunks = new Dictionary<PointInt, Chunk>();
 

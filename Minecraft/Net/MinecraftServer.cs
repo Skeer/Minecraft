@@ -8,10 +8,11 @@ using Minecraft.Map;
 using Minecraft.Packet;
 using Minecraft.Utilities;
 using NBTLibrary;
+using Minecraft.Command;
 
 namespace Minecraft.Net
 {
-    class MinecraftServer : IDisposable
+    public class MinecraftServer : MarshalByRefObject, IDisposable
     {
         private static Logger Log = new Logger(typeof(MinecraftServer));
         private static MinecraftServer _Instance = new MinecraftServer();
@@ -55,6 +56,8 @@ namespace Minecraft.Net
             set { _Entity = value; }
         }
         public ChunkManager ChunkManager { get; set; }
+        public CommandManager CommandManager { get; set; }
+        public List<MinecraftClient> Clients = new List<MinecraftClient>();
         public MinecraftAuthentication Authentication
         {
             get { return _Authentication; }
@@ -84,7 +87,7 @@ namespace Minecraft.Net
             }
 
             PacketRegistry = new MinecraftPacketRegistry();
-
+            CommandManager = new CommandManager();
             ChunkManager = new ChunkManager();
 
             //Socket
@@ -106,7 +109,6 @@ namespace Minecraft.Net
             {
                 Log.Error(e, "Unable to initialize socket server.");
             }
-
         }
 
         private void SessionLock()
@@ -156,6 +158,10 @@ namespace Minecraft.Net
                             else if (splitted[0].ToLower() == "path")
                             {
                                 _Path = splitted[1];
+                            }
+                            else if (splitted[0].ToLower() == "commanddirectory")
+                            {
+                                CommandManager.CommandDirectory = splitted[1];
                             }
                             else
                             {
@@ -242,12 +248,19 @@ namespace Minecraft.Net
                     {
                         ResetEvent.Dispose();
                     }
-                    if(Watcher != null)
+
+                    if (Watcher != null)
                     {
                         Watcher.Dispose();
                     }
+
+                    if (CommandManager != null)
+                    {
+                        CommandManager.Dispose();
+                    }
                 }
 
+                CommandManager = null;
                 Watcher = null;
                 ResetEvent = null;
                 Server = null;
@@ -268,7 +281,7 @@ namespace Minecraft.Net
             // start client handler
             Log.Info("Client connected from {0}.", client.RemoteEndPoint);
 
-            new MinecraftClient(client);
+            Clients.Add(new MinecraftClient(client));
 
             ResetEvent.Set();
         }

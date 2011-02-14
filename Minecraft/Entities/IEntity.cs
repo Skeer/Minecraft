@@ -2,7 +2,7 @@
 
 namespace Minecraft.Entities
 {
-    abstract class IEntity
+   public abstract class IEntity
     {
         public PointDouble Position { get; set; }
 

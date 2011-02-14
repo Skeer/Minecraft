@@ -46,9 +46,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Commands\List.cs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <Compile Include="Command\CommandManager.cs" />
+    <Compile Include="Command\ICommand.cs" />
     <Compile Include="Entities\IEntity.cs" />
     <Compile Include="Entities\Player.cs" />
     <Compile Include="Entities\Rotation.cs" />
+    <Compile Include="Handlers\ChatMessageHandler.cs" />
+    <Compile Include="Handlers\PlayerPositionHandler.cs" />
     <Compile Include="Handlers\PlayerPositionLookHandler.cs" />
     <Compile Include="Map\Chunk.cs" />
     <Compile Include="Map\ChunkManager.cs" />

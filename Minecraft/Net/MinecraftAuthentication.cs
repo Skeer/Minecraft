@@ -1,6 +1,6 @@
 ﻿namespace Minecraft.Net
 {
-    enum MinecraftAuthentication
+    public enum MinecraftAuthentication
     {
         Online,
         Offline,

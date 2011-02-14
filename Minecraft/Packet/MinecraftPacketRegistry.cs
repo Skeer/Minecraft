@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Minecraft.Packet
 {
-    class MinecraftPacketRegistry
+    public class MinecraftPacketRegistry
     {
         private Dictionary<byte, IPacketHandler> Handlers = new Dictionary<byte, IPacketHandler>();
 
@@ -31,6 +31,8 @@ namespace Minecraft.Packet
             Handlers.Add((byte)MinecraftOpcode.KeepAlive, new KeepAliveHandler());
             Handlers.Add((byte)MinecraftOpcode.LoginRequest, new LoginRequestHandler());
             Handlers.Add((byte)MinecraftOpcode.Handshake, new HandshakePacketHandler());
+            Handlers.Add((byte)MinecraftOpcode.ChatMessage, new ChatMessageHandler());
+            Handlers.Add((byte)MinecraftOpcode.PlayerPosition, new PlayerPositionHandler());
             Handlers.Add((byte)MinecraftOpcode.PlayerPositionLook, new PlayerPositionLookHandler());
         }
     }

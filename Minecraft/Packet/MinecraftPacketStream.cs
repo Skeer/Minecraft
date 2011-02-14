@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Minecraft.Packet
 {
-    class MinecraftPacketStream : MemoryStream // Should I replace this with BinaryReader / BinaryWriter?
+    public class MinecraftPacketStream : MemoryStream // Should I replace this with BinaryReader / BinaryWriter?
     {
         public int ReadInt()
         {

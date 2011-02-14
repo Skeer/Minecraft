@@ -3,10 +3,11 @@ using Minecraft.Entities;
 using Minecraft.Map;
 using Minecraft.Net;
 using zlib;
+using System.Text;
 
 namespace Minecraft.Packet
 {
-    class MinecraftPacketCreator
+    public class MinecraftPacketCreator
     {
         public static byte[] GetKeepAlive()
         {
@@ -109,6 +110,31 @@ namespace Minecraft.Packet
                 stream.WriteFloat(rotation.Yaw);
                 stream.WriteFloat(rotation.Pitch);
                 stream.WriteBool(onGround);
+                return stream.ToArray();
+            }
+        }
+
+        public static byte[] GetChatMessage(string message)
+        {
+            using (MinecraftPacketStream stream = new MinecraftPacketStream())
+            {
+                stream.WriteByte((byte)MinecraftOpcode.ChatMessage);
+                stream.WriteString(message);
+                return stream.ToArray();
+            }
+        }
+
+        public static byte[] GetChatMessage(string username, string message)
+        {
+            using (MinecraftPacketStream stream = new MinecraftPacketStream())
+            {
+                stream.WriteByte((byte)MinecraftOpcode.ChatMessage);
+                StringBuilder builder = new StringBuilder();
+                builder.Append("<");
+                builder.Append(username);
+                builder.Append("> ");
+                builder.Append(message);
+                stream.WriteString(builder.ToString());
                 return stream.ToArray();
             }
         }

@@ -3,7 +3,7 @@ using Minecraft.Net;
 
 namespace Minecraft.Handlers
 {
-    interface IPacketHandler
+    public interface IPacketHandler
     {
         bool HandlePacket(MinecraftClient client, MinecraftPacketStream stream);
     }

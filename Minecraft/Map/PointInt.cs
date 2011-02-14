@@ -1,6 +1,6 @@
 ﻿namespace Minecraft.Map
 {
-    class PointInt
+    public class PointInt
     {
         public int X { get; set; }
         public short Y { get; set; }

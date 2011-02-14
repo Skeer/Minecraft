@@ -12,7 +12,7 @@ using Minecraft.Map;
 
 namespace Minecraft.Net
 {
-    class MinecraftClient : IDisposable
+    public class MinecraftClient : MarshalByRefObject, IDisposable
     {
         private static Logger Log = new Logger(typeof(MinecraftClient));
         private bool Disposed = false;
@@ -44,7 +44,8 @@ namespace Minecraft.Net
 
         private void ConnectionTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            Disconnect("Client not responding.");
+            Log.Warning("Client supposedly timed out. I don't know if this works, hence disabled.");
+            //Disconnect("Client not responding.");
         }
 
         public void Disconnect(string message)
@@ -77,6 +78,8 @@ namespace Minecraft.Net
                     if (handler == null)
                     {
                         Log.Warning("Unable to process packet with id {0}.", id);
+                        Disconnect("Server failed to process packet.");
+                        Dispose();
                     }
                     else
                     {
@@ -108,7 +111,6 @@ namespace Minecraft.Net
                     Received.Position = position;
 
                     ProcessReceived();
-                    Log.Info("Received {0} bytes.", length);
 
                     Client.BeginReceive(Buffer, 0, Buffer.Length, SocketFlags.None, OnReceive, null);
                 }
@@ -119,7 +121,12 @@ namespace Minecraft.Net
                 }
 
             }
-            catch(Exception e)
+            catch (NullReferenceException)
+            {
+                Log.Info("Client disconnected from {0}.", EndPoint);
+                Dispose();
+            }
+            catch (Exception e)
             {
                 Log.Error(e, "Client disconnected from {0}.", EndPoint);
                 Dispose();
@@ -129,13 +136,14 @@ namespace Minecraft.Net
         private void OnSend(IAsyncResult result)
         {
             int length = Client.EndSend(result);
-
-            Log.Info("Sent {0} bytes.", length);
         }
 
         private void OnDisconnect(IAsyncResult result)
         {
-            Client.EndDisconnect(result);
+            if (Client != null)
+            {
+                Client.EndDisconnect(result);
+            }
             Dispose();
         }
 
@@ -169,6 +177,11 @@ namespace Minecraft.Net
                     if (Received != null)
                     {
                         Received.Dispose();
+                    }
+
+                    if(MinecraftServer.Instance.Clients.Contains(this))
+                    {
+                        MinecraftServer.Instance.Clients.Remove(this);
                     }
 
                     //Remove client for Server's client list?

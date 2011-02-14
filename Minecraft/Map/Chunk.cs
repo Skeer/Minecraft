@@ -7,7 +7,7 @@ using Minecraft.Entities;
 
 namespace Minecraft.Map
 {
-    class Chunk
+    public class Chunk
     {
         public string Path { get; set; }
 

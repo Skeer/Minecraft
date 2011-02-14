@@ -45,8 +45,8 @@ namespace Minecraft.Utilities
             else
             {
                 Writer.WriteLine(message);
-                Writer.Flush();
             }
+            Writer.Flush();
         }
 
         public void Warning(string message, params object[] args)
@@ -78,6 +78,7 @@ namespace Minecraft.Utilities
             Writer.Flush();
         }
 
+      
         public void Error(Exception e, string message, params object[] args)
         {
             if (Display)
