@@ -15,7 +15,7 @@
         Player = 0x0A,
         PlayerPosition = 0x0B,
         PlayerLook = 0x0C,
-        playerPositionLook = 0x0D,
+        PlayerPositionLook = 0x0D,
         PlayerDigging = 0x0E,
         PlayerBlockPlacement = 0x0F,
         HoldingChange = 0x10,
