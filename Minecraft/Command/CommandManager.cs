@@ -1,30 +1,29 @@
-﻿using Microsoft.CSharp;
+﻿using System;
 using System.CodeDom.Compiler;
-using System;
-using System.Reflection;
-using System.IO;
-using Minecraft.Utilities;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using Microsoft.CSharp;
 using Minecraft.Net;
+using Minecraft.Utilities;
 
 namespace Minecraft.Command
 {
     public class CommandManager : IDisposable
     {
-        CSharpCodeProvider Provider = new CSharpCodeProvider();
-        CompilerParameters Parameters = new CompilerParameters();
-        AppDomainSetup Setup = new AppDomainSetup();
+        private static Logger Log = new Logger(typeof(CommandManager));
+        private bool Disposed = false;
         private string _CommandDirectory = "Commands/";
+        private AppDomainSetup Setup = new AppDomainSetup();
+        private CompilerParameters Parameters = new CompilerParameters();
+        private CSharpCodeProvider Provider = new CSharpCodeProvider();
+        private Dictionary<string, string> Commands = new Dictionary<string, string>(); // Document?
 
         public string CommandDirectory
         {
             get { return _CommandDirectory; }
             set { _CommandDirectory = value; }
         }
-        private static Logger Log = new Logger(typeof(CommandManager));
-        // Too lazy to make a documentation
-        private Dictionary<string, string> Commands = new Dictionary<string, string>();
-
 
         public bool CommandExists(string name)
         {
@@ -60,7 +59,6 @@ namespace Minecraft.Command
                 }
             }
         }
-
 
         private bool Compile(string name)
         {
@@ -153,7 +151,5 @@ namespace Minecraft.Command
                 Disposed = true;
             }
         }
-
-        private bool Disposed = false;
     }
 }

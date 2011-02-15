@@ -1,7 +1,7 @@
-﻿using Minecraft.Net;
-using Minecraft.Packet;
-using System.Net;
+﻿using System.Net;
 using System.Text;
+using Minecraft.Net;
+using Minecraft.Packet;
 
 namespace Minecraft.Handlers
 {

@@ -17,6 +17,9 @@ namespace NBTLibrary
             return file;
         }
 
+        public NBTFile()
+        { }
+
         private NBTFile(string path)
         {
             using (GZipStream gStream = new GZipStream(new FileStream(path, FileMode.Open), CompressionMode.Decompress))
@@ -38,6 +41,7 @@ namespace NBTLibrary
         {
             Stream.SetLength(0);
             SaveTag(File);
+            Stream.Position = 0;
             using (GZipStream gStream = new GZipStream(new FileStream(path, FileMode.Create), CompressionMode.Compress))
             {
                 Stream.CopyTo(gStream);
@@ -47,11 +51,11 @@ namespace NBTLibrary
 
         private void SaveTag(Tag tag, bool IsList = false)
         {
-            Stream.WriteTag(tag.Type);
             if (tag.Type != TagType.End)
             {
                 if (!IsList)
                 {
+                    Stream.WriteTag(tag.Type);
                     Stream.WriteString(tag.Name);
                 }
                 switch (tag.Type)
@@ -73,6 +77,7 @@ namespace NBTLibrary
                         {
                             SaveTag(t);
                         }
+                        Stream.WriteTag(TagType.End);
                         break;
                     case TagType.Double:
                         Stream.WriteDouble((double)tag.Payload);
@@ -85,6 +90,15 @@ namespace NBTLibrary
                         break;
                     case TagType.List:
                         Tag[] load = (Tag[])tag.Payload;
+                        if (load.Length > 0)
+                        {
+                            Stream.WriteTag(load[0].Type);
+                        }
+                        else
+                        {
+                            // Dummy tag lol
+                            Stream.WriteTag(TagType.Byte);
+                        }
                         Stream.WriteInt(load.Length);
                         foreach (Tag t in load)
                         {
@@ -106,7 +120,7 @@ namespace NBTLibrary
 
         private void ParseTag(Tag tag, bool IsList = false)
         {
-            if (tag.Type != TagType.End || (byte)tag.Type == 0xff)
+            if (tag.Type != TagType.End && (byte)tag.Type != 0xff)
             {
                 if (!IsList)
                 {

@@ -1,10 +1,9 @@
-﻿using System;
+﻿using Minecraft.Net;
 using Minecraft.Packet;
-using Minecraft.Net;
 
 namespace Minecraft.Handlers
 {
-    class PlayerPositionLookHandler:IPacketHandler
+    class PlayerPositionLookHandler : IPacketHandler
     {
         public bool HandlePacket(MinecraftClient client, MinecraftPacketStream stream)
         {
@@ -12,16 +11,16 @@ namespace Minecraft.Handlers
             // Although I don't see anything that might go wrong... Since the server and client is essentially "syncronized"
             if (stream.Length - stream.Position >= 8)
             {
-                client.Player.Position.X = stream.ReadDouble();
+                client.Player.X = stream.ReadDouble();
                 if (stream.Length - stream.Position >= 8)
                 {
                     client.Player.Stance = stream.ReadDouble();
                     if (stream.Length - stream.Position >= 8)
                     {
-                        client.Player.Position.Y = stream.ReadDouble();
+                        client.Player.Y = stream.ReadDouble();
                         if (stream.Length - stream.Position >= 8)
                         {
-                            client.Player.Position.Z = stream.ReadDouble();
+                            client.Player.Z = stream.ReadDouble();
                             if (stream.Length - stream.Position >= 4)
                             {
                                 client.Player.Rotation.Yaw = stream.ReadFloat();
@@ -31,6 +30,7 @@ namespace Minecraft.Handlers
                                     if (stream.Length - stream.Position >= 1)
                                     {
                                         client.Player.OnGround = stream.ReadBool();
+                                        client.Player.Update();
                                         return true;
                                     }
                                 }

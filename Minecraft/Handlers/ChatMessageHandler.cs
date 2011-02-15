@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Minecraft.Net;
 using Minecraft.Packet;
 
 namespace Minecraft.Handlers
 {
-    class ChatMessageHandler:IPacketHandler
+    class ChatMessageHandler : IPacketHandler
     {
         public bool HandlePacket(MinecraftClient client, MinecraftPacketStream stream)
         {
@@ -19,7 +16,7 @@ namespace Minecraft.Handlers
                     string message = stream.ReadString(length);
                     if (message.Substring(0, 1) == "/")
                     {
-                        string[] splitted = message.Substring(1).Split(new char[] {' '}, StringSplitOptions.RemoveEmptyEntries);
+                        string[] splitted = message.Substring(1).Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                         if (MinecraftServer.Instance.CommandManager.CommandExists(splitted[0].ToLower()))
                         {
                             MinecraftServer.Instance.CommandManager.RunCommand(client, splitted[0].ToLower(), splitted);

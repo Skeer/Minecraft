@@ -1,5 +1,5 @@
-﻿using Minecraft.Packet;
-using Minecraft.Net;
+﻿using Minecraft.Net;
+using Minecraft.Packet;
 
 namespace Minecraft.Handlers
 {

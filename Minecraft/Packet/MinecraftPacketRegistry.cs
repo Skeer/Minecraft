@@ -1,5 +1,5 @@
-﻿using Minecraft.Handlers;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Minecraft.Handlers;
 
 namespace Minecraft.Packet
 {
@@ -32,7 +32,9 @@ namespace Minecraft.Packet
             Handlers.Add((byte)MinecraftOpcode.LoginRequest, new LoginRequestHandler());
             Handlers.Add((byte)MinecraftOpcode.Handshake, new HandshakePacketHandler());
             Handlers.Add((byte)MinecraftOpcode.ChatMessage, new ChatMessageHandler());
+            Handlers.Add((byte)MinecraftOpcode.Player, new PlayerHandler());
             Handlers.Add((byte)MinecraftOpcode.PlayerPosition, new PlayerPositionHandler());
+            Handlers.Add((byte)MinecraftOpcode.PlayerLook, new PlayerLookHandler());
             Handlers.Add((byte)MinecraftOpcode.PlayerPositionLook, new PlayerPositionLookHandler());
         }
     }

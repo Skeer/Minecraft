@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Minecraft.Net;
 using Minecraft.Packet;
-using Minecraft.Net;
 
 namespace Minecraft.Handlers
 {
@@ -25,12 +21,12 @@ namespace Minecraft.Handlers
                             double z = stream.ReadDouble();
                             if (stream.Length - stream.Position >= 1)
                             {
-                                bool onGround = stream.ReadBool();
-                                client.Player.Position.X = x;
-                                client.Player.Position.Y = y;
+                                client.Player.X = x;
+                                client.Player.Y = y;
                                 client.Player.Stance = stance;
-                                client.Player.Position.Z = z;
-                                client.Player.OnGround = onGround;
+                                client.Player.Z = z;
+                                client.Player.OnGround = stream.ReadBool();
+                                client.Player.Update();
                                 return true;
                             }
                         }

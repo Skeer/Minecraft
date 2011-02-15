@@ -1,42 +1,64 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using NBTLibrary;
 using Minecraft.Entities;
+using NBTLibrary;
 
 namespace Minecraft.Map
 {
     public class Chunk
     {
-        public string Path { get; set; }
-
-        #region NBT Data
-        public byte[] Data { get; set; }
-        public List<IEntity> Entities { get; set; }
-        public long LastUpdate { get; set; }
-        public PointInt Position { get; set; }
-        public List<IEntity> TileEntities { get; set; }
         public byte TerrainPopulated { get; set; }
-        public byte[] SkyLight { get; set; }
-        public byte[] HeightMap { get; set; }
         public byte[] BlockLight { get; set; }
         public byte[] Blocks { get; set; }
-        #endregion
+        public byte[] Data { get; set; }
+        public byte[] HeightMap { get; set; }
+        public byte[] SkyLight { get; set; }
+        /// <summary>
+        /// In chunks (16 blocks).
+        /// </summary>
+        public int X { get; set; }
+        /// <summary>
+        /// In chunks (16 blocks).
+        /// </summary>
+        public int Z { get; set; }
+        public long LastUpdate { get; set; }
+        public string Path { get; set; }
+        public List<Entity> Entities = new List<Entity>();
+        public List<Entity> TileEntities = new List<Entity>();
 
         public Chunk(string path)
         {
             Path = path;
 
+            Reload();
+        }
+
+        private void Reload()
+        {
+            Entities.Clear();
+            TileEntities.Clear();
             using (NBTFile file = NBTFile.Open(Path))
             {
                 Data = (byte[])file.FindPayload("Data");
-                //TODO: Parse Entities
-                //Entities = (List<IEntity>)file.FindPayload("Entities");
+
+                Tag[] entities = (Tag[])file.FindPayload("Entities");
+                foreach (Tag t in entities)
+                {
+                    //TODO: Parse Entities
+                    Entities.Add(new Entity());
+                }
+
                 LastUpdate = (long)file.FindPayload("LastUpdate");
-                Position = new PointInt() { X = (int) file.FindPayload("xPos"), Z = (int) file.FindPayload("zPos")};
-                //TODO: Parse more entities
-                //TileEntities = (List<IEntity>)file.FindPayload("TileEntities");
+                X = (int)file.FindPayload("xPos");
+                Z = (int)file.FindPayload("zPos");
+
+                Tag[] tileEntities = (Tag[])file.FindPayload("TileEntities");
+                foreach (Tag t in tileEntities)
+                {
+                    //TODO: Parse more entities
+                    TileEntities.Add(new Entity());
+                }
+
                 TerrainPopulated = (byte)file.FindPayload("TerrainPopulated");
                 SkyLight = (byte[])file.FindPayload("SkyLight");
                 HeightMap = (byte[])file.FindPayload("HeightMap");
@@ -47,10 +69,12 @@ namespace Minecraft.Map
 
         public void Save()
         {
-            // TODO: create the NBT File...
-            NBTFile file = null;
+            throw new NotImplementedException();
+        }
 
-            file.Save(Path);
+        public override string ToString()
+        {
+            return "(" + X + ", " + Z + ")";
         }
     }
 }

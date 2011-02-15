@@ -1,6 +1,6 @@
-﻿using Minecraft.Packet;
+﻿using System;
 using Minecraft.Net;
-using System;
+using Minecraft.Packet;
 
 namespace Minecraft.Handlers
 {
@@ -14,12 +14,6 @@ namespace Minecraft.Handlers
                 if (stream.Length - stream.Position >= length)
                 {
                     client.Username = stream.ReadString(length);
-
-                    //response
-
-                    // - = no password
-                    // + = password
-                    // hash = check with minecraft.net
 
                     if (MinecraftServer.Instance.Authentication == MinecraftAuthentication.Online)
                     {

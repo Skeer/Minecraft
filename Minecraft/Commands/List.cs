@@ -1,8 +1,8 @@
-﻿using Minecraft.Command;
-using Minecraft.Net;
+﻿using System;
 using System.Text;
+using Minecraft.Command;
+using Minecraft.Net;
 using Minecraft.Packet;
-using System;
 
 namespace Minecraft.Commands
 {

@@ -4,11 +4,11 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using Minecraft.Command;
 using Minecraft.Map;
 using Minecraft.Packet;
 using Minecraft.Utilities;
 using NBTLibrary;
-using Minecraft.Command;
 
 namespace Minecraft.Net
 {
@@ -39,6 +39,18 @@ namespace Minecraft.Net
             get { return _Dimension; }
             set { _Dimension = value; }
         }
+        /// <summary>
+        /// In blocks (32 px).
+        /// </summary>
+        public int SpawnX { get; set; }
+        /// <summary>
+        /// In blocks (32 px).
+        /// </summary>
+        public short SpawnY { get; set; }
+        /// <summary>
+        /// In blocks (32 px).
+        /// </summary>
+        public int SpawnZ { get; set; }
         public int Version
         {
             get { return _Version; }
@@ -64,7 +76,6 @@ namespace Minecraft.Net
             set { _Authentication = value; }
         }
         public MinecraftPacketRegistry PacketRegistry { get; set; }
-        public PointInt SpawnPosition { get; set; }
 
         private MinecraftServer()
         { }
@@ -81,7 +92,9 @@ namespace Minecraft.Net
 
             using (NBTFile levelFile = NBTFile.Open(_Path + "level.dat"))
             {
-                SpawnPosition = new PointInt() { X = (int)levelFile.FindPayload("SpawnX"), Y = (short)(int)levelFile.FindPayload("SpawnY"), Z = (int)levelFile.FindPayload("SpawnZ") };
+                SpawnX = (int)levelFile.FindPayload("SpawnX");
+                SpawnY = (short)(int)levelFile.FindPayload("SpawnY"); 
+                SpawnZ = (int)levelFile.FindPayload("SpawnZ");
 
                 RandomSeed = (long)levelFile.FindPayload("RandomSeed");
             }

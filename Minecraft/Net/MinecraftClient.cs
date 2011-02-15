@@ -1,14 +1,12 @@
-﻿using System.Net.Sockets;
-using System;
-using Minecraft.Utilities;
-using System.IO;
-using Minecraft.Packet;
-using Minecraft.Handlers;
-using System.Timers;
-using NBTLibrary;
+﻿using System;
 using System.Collections.Generic;
+using System.Net.Sockets;
+using System.Timers;
 using Minecraft.Entities;
+using Minecraft.Handlers;
 using Minecraft.Map;
+using Minecraft.Packet;
+using Minecraft.Utilities;
 
 namespace Minecraft.Net
 {
@@ -116,19 +114,18 @@ namespace Minecraft.Net
                 }
                 else
                 {
-                    Log.Info("Client disconnected from {0}.", EndPoint);
-                    Dispose();
+                    throw new NullReferenceException();
                 }
 
             }
             catch (NullReferenceException)
             {
-                Log.Info("Client disconnected from {0}.", EndPoint);
-                Dispose();
+                Disconnected();
             }
-            catch (Exception e)
+            catch
             {
-                Log.Error(e, "Client disconnected from {0}.", EndPoint);
+                Log.Warning("Client disconnected from {0}.", EndPoint);
+                Player.Save();
                 Dispose();
             }
         }
@@ -138,9 +135,16 @@ namespace Minecraft.Net
             int length = Client.EndSend(result);
         }
 
+        private void Disconnected()
+        {
+            Log.Info("Client disconnected from {0}.", EndPoint);
+            Player.Save();
+            Dispose();
+        }
+
         private void OnDisconnect(IAsyncResult result)
         {
-            if (Client != null)
+            if (Client != null && Client.Connected)
             {
                 Client.EndDisconnect(result);
             }
@@ -179,7 +183,7 @@ namespace Minecraft.Net
                         Received.Dispose();
                     }
 
-                    if(MinecraftServer.Instance.Clients.Contains(this))
+                    if (MinecraftServer.Instance.Clients.Contains(this))
                     {
                         MinecraftServer.Instance.Clients.Remove(this);
                     }
@@ -208,21 +212,16 @@ namespace Minecraft.Net
 
         public void Load()
         {
-            Player = new Player(Username);
+            Player = new Player(this,Username);
 
             //SEND Beginning Chunks
             //NOTE: Dunno if this is correct.
-            List<Chunk> chunks = MinecraftServer.Instance.ChunkManager.GetChunks(new PointInt() { X = (int)Player.Position.X / 16, Z = (int)Player.Position.Z / 16 });
-            foreach (Chunk c in chunks)
-            {
-                //TODO: Probably be better to not pass the whole chunk........
-                Client.Send(MinecraftPacketCreator.GetPreChunk(c));
-                Client.Send(MinecraftPacketCreator.GetMapChunk(c));
-            }
 
-            Client.Send(MinecraftPacketCreator.GetSpawnPosition(MinecraftServer.Instance.SpawnPosition));
+            Player.Update();
 
-            Client.Send(MinecraftPacketCreator.GetPositionLook(Player.Position, Player.Rotation, Player.OnGround));
+            Client.Send(MinecraftPacketCreator.GetSpawnPosition(MinecraftServer.Instance.SpawnX, MinecraftServer.Instance.SpawnY, MinecraftServer.Instance.SpawnZ));
+
+            Client.Send(MinecraftPacketCreator.GetPositionLook(Player.X, Player.Y, Player.Z, Player.Rotation, Player.OnGround));
         }
     }
 }

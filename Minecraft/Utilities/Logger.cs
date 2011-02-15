@@ -12,9 +12,7 @@ namespace Minecraft.Utilities
             get { return _Display; }
             set { _Display = value; }
         }
-
         public static StreamWriter Writer = new StreamWriter("server.log");
-
         public string ClassName { get; set; }
 
         public Logger(Type className)
@@ -78,7 +76,36 @@ namespace Minecraft.Utilities
             Writer.Flush();
         }
 
-      
+        public void Warning(Exception e, string message, params object[] args)
+        {
+            if (Display)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Error.Write("{0} [WARNING] ", DateTime.Now);
+                if (args.Length > 0)
+                {
+                    Console.Error.WriteLine(message, args);
+                }
+                else
+                {
+                    Console.Error.WriteLine(message);
+                }
+                Console.ResetColor();
+                Console.Error.WriteLine(e);
+            }
+
+            Writer.Write("{0} [ERROR] ", DateTime.Now);
+            if (args.Length > 0)
+            {
+                Writer.WriteLine(message, args);
+            }
+            else
+            {
+                Writer.WriteLine(message);
+            }
+            Writer.WriteLine(e);
+        }
+
         public void Error(Exception e, string message, params object[] args)
         {
             if (Display)

@@ -4,7 +4,7 @@ namespace Minecraft.Utilities
 {
     class Base36
     {
-        private static string Key = "0123456789abcdefghijklmnopqrstuvwxyz";
+        private const string Key = "0123456789abcdefghijklmnopqrstuvwxyz";
 
         public static string Parse(int i)
         {

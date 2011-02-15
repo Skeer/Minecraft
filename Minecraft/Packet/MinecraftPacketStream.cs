@@ -1,19 +1,11 @@
-﻿using System.IO;
-using System;
+﻿using System;
+using System.IO;
 using System.Text;
 
 namespace Minecraft.Packet
 {
     public class MinecraftPacketStream : MemoryStream // Should I replace this with BinaryReader / BinaryWriter?
     {
-        public int ReadInt()
-        {
-            byte[] buffer = new byte[4];
-            Read(buffer, 0, buffer.Length);
-            ReverseBytes(buffer);
-            return BitConverter.ToInt32(buffer, 0);
-        }
-
         private void ReverseBytes(byte[] buffer)
         {
             int index = buffer.Length - 1;
@@ -24,6 +16,14 @@ namespace Minecraft.Packet
                 buffer[i] = buffer[index - i];
                 buffer[index - i] = t;
             }
+        }
+
+        public int ReadInt()
+        {
+            byte[] buffer = new byte[4];
+            Read(buffer, 0, buffer.Length);
+            ReverseBytes(buffer);
+            return BitConverter.ToInt32(buffer, 0);
         }
 
         public short ReadShort()
@@ -37,6 +37,38 @@ namespace Minecraft.Packet
         public new byte ReadByte()
         {
             return (byte)base.ReadByte();
+        }
+
+        public long ReadLong()
+        {
+            byte[] buffer = new byte[8];
+            Read(buffer, 0, buffer.Length);
+            ReverseBytes(buffer);
+            return BitConverter.ToInt64(buffer, 0);
+        }
+
+        public double ReadDouble()
+        {
+            byte[] buffer = new byte[8];
+            Read(buffer, 0, buffer.Length);
+            ReverseBytes(buffer);
+            return BitConverter.ToDouble(buffer, 0);
+        }
+
+        public float ReadFloat()
+        {
+            byte[] buffer = new byte[4];
+            Read(buffer, 0, buffer.Length);
+            ReverseBytes(buffer);
+            return BitConverter.ToSingle(buffer, 0);
+        }
+
+        public bool ReadBool()
+        {
+            byte[] buffer = new byte[1];
+            Read(buffer, 0, buffer.Length);
+            ReverseBytes(buffer);
+            return BitConverter.ToBoolean(buffer, 0);
         }
 
         public string ReadString(short length)
@@ -58,14 +90,6 @@ namespace Minecraft.Packet
             byte[] buffer = UTF8Encoding.UTF8.GetBytes(s);
             WriteShort((short)buffer.Length);
             Write(buffer, 0, buffer.Length);
-        }
-
-        public long ReadLong()
-        {
-            byte[] buffer = new byte[8];
-            Read(buffer, 0, buffer.Length);
-            ReverseBytes(buffer);
-            return BitConverter.ToInt64(buffer, 0);
         }
 
         public void WriteUint(uint u)
@@ -110,28 +134,5 @@ namespace Minecraft.Packet
             Write(buffer, 0, buffer.Length);
         }
 
-        public double ReadDouble()
-        {
-            byte[] buffer = new byte[8];
-            Read(buffer, 0, buffer.Length);
-            ReverseBytes(buffer);
-            return BitConverter.ToDouble(buffer, 0);
-        }
-
-        public float ReadFloat()
-        {
-            byte[] buffer = new byte[4];
-            Read(buffer, 0, buffer.Length);
-            ReverseBytes(buffer);
-            return BitConverter.ToSingle(buffer, 0);
-        }
-
-        public bool ReadBool()
-        {
-            byte[] buffer = new byte[1];
-            Read(buffer, 0, buffer.Length);
-            ReverseBytes(buffer);
-            return BitConverter.ToBoolean(buffer, 0);
-        }
     }
 }
