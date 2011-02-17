@@ -6,6 +6,7 @@ using System.Reflection;
 using Microsoft.CSharp;
 using Minecraft.Net;
 using Minecraft.Utilities;
+using Minecraft.Packet;
 
 namespace Minecraft.Command
 {
@@ -116,7 +117,15 @@ namespace Minecraft.Command
             AppDomain domain = AppDomain.CreateDomain("domain", null, Setup);
             try
             {
-                ((ICommand)domain.CreateInstanceFromAndUnwrap(Path.Combine(CommandDirectory, name + ".dll"), "Minecraft.Commands." + Commands[name])).Run(MinecraftServer.Instance, client, args);
+                ICommand command = ((ICommand)domain.CreateInstanceFromAndUnwrap(Path.Combine(CommandDirectory, Commands[name] + ".dll"), "Minecraft.Commands." + Commands[name]));
+                if (command.Rank.CompareTo(client.Player.Rank) >= 0)
+                {
+                    command.Run(MinecraftServer.Instance, client, args);
+                }
+                else
+                {
+                    client.Send(MinecraftPacketCreator.GetChatMessage("You do not have sufficient privileges to run the command."));
+                }
             }
             finally
             {

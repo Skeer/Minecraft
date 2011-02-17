@@ -1,8 +1,8 @@
-﻿using Minecraft.Map;
+﻿using System;
 
 namespace Minecraft.Entities
 {
-   public class Entity
+   public class Entity : MarshalByRefObject
    {
        /// <summary>
        /// In blocks (32 px).

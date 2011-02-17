@@ -14,6 +14,11 @@ namespace Minecraft.Handlers
                 if (stream.Length - stream.Position >= length)
                 {
                     client.Username = stream.ReadString(length);
+                    //LOL, for testing
+                    if (client.Username == "Player")
+                    {
+                        client.Username = "Helmsman";
+                    }
 
                     if (MinecraftServer.Instance.Authentication == MinecraftAuthentication.Online)
                     {

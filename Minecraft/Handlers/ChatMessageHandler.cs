@@ -1,6 +1,7 @@
 ﻿using System;
 using Minecraft.Net;
 using Minecraft.Packet;
+using Minecraft.Entities;
 
 namespace Minecraft.Handlers
 {
@@ -36,9 +37,9 @@ namespace Minecraft.Handlers
                     }
                     else
                     {
-                        foreach (MinecraftClient c in MinecraftServer.Instance.Clients)
+                        foreach (Player p in MinecraftServer.Instance.Players.Values)
                         {
-                            c.Send(MinecraftPacketCreator.GetChatMessage(client.Username, message));
+                            p.Client.Send(MinecraftPacketCreator.GetChatMessage(client.Username, message));
                         }
                     }
                     return true;

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Timers;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using Minecraft.Command;
+using Minecraft.Entities;
 using Minecraft.Map;
 using Minecraft.Packet;
 using Minecraft.Utilities;
@@ -28,6 +30,7 @@ namespace Minecraft.Net
         private List<string> Administrators = new List<string>();
         private MinecraftAuthentication _Authentication = MinecraftAuthentication.Online;
         private Socket Server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        private System.Timers.Timer TimeTimer = new System.Timers.Timer(1000);
 
         public static MinecraftServer Instance
         {
@@ -51,6 +54,7 @@ namespace Minecraft.Net
         /// In blocks (32 px).
         /// </summary>
         public int SpawnZ { get; set; }
+        public long Time { get; set; }
         public int Version
         {
             get { return _Version; }
@@ -69,7 +73,7 @@ namespace Minecraft.Net
         }
         public ChunkManager ChunkManager { get; set; }
         public CommandManager CommandManager { get; set; }
-        public List<MinecraftClient> Clients = new List<MinecraftClient>();
+        public Dictionary<string, Player> Players = new Dictionary<string, Player>();
         public MinecraftAuthentication Authentication
         {
             get { return _Authentication; }
@@ -90,18 +94,23 @@ namespace Minecraft.Net
             Watcher = new FileSystemWatcher(_Path, "session.lock");
             Watcher.Changed += new FileSystemEventHandler(Watcher_Changed);
 
-            using (NBTFile levelFile = NBTFile.Open(_Path + "level.dat"))
+            using (NBTFile file = NBTFile.Open(_Path + "level.dat"))
             {
-                SpawnX = (int)levelFile.FindPayload("SpawnX");
-                SpawnY = (short)(int)levelFile.FindPayload("SpawnY"); 
-                SpawnZ = (int)levelFile.FindPayload("SpawnZ");
+                SpawnX = (int)file.FindPayload("SpawnX");
+                SpawnY = (short)(int)file.FindPayload("SpawnY"); 
+                SpawnZ = (int)file.FindPayload("SpawnZ");
 
-                RandomSeed = (long)levelFile.FindPayload("RandomSeed");
+                Time = (long)file.FindPayload("Time");
+
+                RandomSeed = (long)file.FindPayload("RandomSeed");
             }
 
             PacketRegistry = new MinecraftPacketRegistry();
             CommandManager = new CommandManager();
             ChunkManager = new ChunkManager();
+
+            TimeTimer.Elapsed += new ElapsedEventHandler(TimeTimer_Elapsed);
+            TimeTimer.Start();
 
             //Socket
             try
@@ -122,6 +131,11 @@ namespace Minecraft.Net
             {
                 Log.Error(e, "Unable to initialize socket server.");
             }
+        }
+
+        private void TimeTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            Time += 20;
         }
 
         private void SessionLock()
@@ -292,11 +306,20 @@ namespace Minecraft.Net
             Socket client = Server.EndAccept(result);
 
             // start client handler
+            new MinecraftClient(client);
+
             Log.Info("Client connected from {0}.", client.RemoteEndPoint);
 
-            Clients.Add(new MinecraftClient(client));
-
             ResetEvent.Set();
+        }
+
+        public MinecraftRank GetRank(string Username)
+        {
+            if(Administrators.Contains(Username.ToLower()))
+            {
+                return MinecraftRank.Admin;
+            }
+            return MinecraftRank.Player;
         }
     }
 }

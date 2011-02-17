@@ -7,6 +7,7 @@ using Minecraft.Handlers;
 using Minecraft.Map;
 using Minecraft.Packet;
 using Minecraft.Utilities;
+using Minecraft.Items;
 
 namespace Minecraft.Net
 {
@@ -24,6 +25,7 @@ namespace Minecraft.Net
         public string Username { get; set; }
         public string Hash { get; set; }
         public Player Player { get; set; }
+        public uint EID { get; set; }
 
         public MinecraftClient(Socket client)
         {
@@ -183,9 +185,9 @@ namespace Minecraft.Net
                         Received.Dispose();
                     }
 
-                    if (MinecraftServer.Instance.Clients.Contains(this))
+                    if (MinecraftServer.Instance.Players.ContainsKey(Username.ToLower()))
                     {
-                        MinecraftServer.Instance.Clients.Remove(this);
+                        MinecraftServer.Instance.Players.Remove(Username.ToLower());
                     }
 
                     //Remove client for Server's client list?
@@ -212,16 +214,25 @@ namespace Minecraft.Net
 
         public void Load()
         {
-            Player = new Player(this,Username);
+            Player = new Player(this, Username, EID);
+
+            MinecraftServer.Instance.Players.Add(Username.ToLower(), Player);
 
             //SEND Beginning Chunks
             //NOTE: Dunno if this is correct.
 
             Player.Update();
 
+            foreach (Item i in Player.Inventory.Values)
+            {
+                Client.Send(MinecraftPacketCreator.GetSetSlot(0, i.Slot, i.ID, i.Count, i.Uses));
+            }
+
             Client.Send(MinecraftPacketCreator.GetSpawnPosition(MinecraftServer.Instance.SpawnX, MinecraftServer.Instance.SpawnY, MinecraftServer.Instance.SpawnZ));
 
             Client.Send(MinecraftPacketCreator.GetPositionLook(Player.X, Player.Y, Player.Z, Player.Rotation, Player.OnGround));
+
+            Client.Send(MinecraftPacketCreator.GetTimeUpdate(MinecraftServer.Instance.Time));
         }
     }
 }

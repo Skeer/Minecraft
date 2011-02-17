@@ -42,7 +42,8 @@ namespace Minecraft.Handlers
                                                 response.GetResponseStream().Read(buffer, 0, buffer.Length);
                                                 if (UTF8Encoding.UTF8.GetString(buffer) == "YES")
                                                 {
-                                                    client.Send(MinecraftPacketCreator.GetLoginRequest());
+                                                    client.EID = MinecraftServer.Instance.Entity++;
+                                                    client.Send(MinecraftPacketCreator.GetLoginRequest(client.EID));
                                                     client.Load();
                                                     return true;
                                                 }
@@ -53,7 +54,8 @@ namespace Minecraft.Handlers
                                             }
                                             else if (MinecraftServer.Instance.Authentication == MinecraftAuthentication.Offline)
                                             {
-                                                client.Send(MinecraftPacketCreator.GetLoginRequest());
+                                                client.EID = MinecraftServer.Instance.Entity++;
+                                                client.Send(MinecraftPacketCreator.GetLoginRequest(client.EID));
                                                 client.Load();
                                                 return true;
                                             }

@@ -46,15 +46,25 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Commands\List.cs">
+    <Content Include="Commands\List.cs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    </Content>
+    <Content Include="Commands\Spawn.cs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Commands\Item.cs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Compile Include="Command\CommandManager.cs" />
     <Compile Include="Command\ICommand.cs" />
+    <Compile Include="Command\MinecraftRank.cs" />
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\Player.cs" />
     <Compile Include="Entities\Rotation.cs" />
+    <Compile Include="Handlers\AnimationHandler.cs" />
     <Compile Include="Handlers\ChatMessageHandler.cs" />
+    <Compile Include="Handlers\HoldingChangeHandler.cs" />
+    <Compile Include="Handlers\PlayerDiggingHandler.cs" />
     <Compile Include="Handlers\PlayerLookHandler.cs" />
     <Compile Include="Handlers\PlayerHandler.cs" />
     <Compile Include="Handlers\PlayerPositionHandler.cs" />

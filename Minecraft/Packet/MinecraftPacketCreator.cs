@@ -34,12 +34,12 @@ namespace Minecraft.Packet
             }
         }
 
-        public static byte[] GetLoginRequest()
+        public static byte[] GetLoginRequest(uint eid)
         {
             using (MinecraftPacketStream stream = new MinecraftPacketStream())
             {
                 stream.WriteByte((byte)MinecraftOpcode.LoginRequest);
-                stream.WriteUint(MinecraftServer.Instance.Entity++);
+                stream.WriteUint(eid);
                 stream.WriteString("");
                 stream.WriteString("");
                 stream.WriteLong(MinecraftServer.Instance.RandomSeed);
@@ -138,6 +138,60 @@ namespace Minecraft.Packet
                 builder.Append("> ");
                 builder.Append(message);
                 stream.WriteString(builder.ToString());
+                return stream.ToArray();
+            }
+        }
+
+        public static byte[] GetTimeUpdate(long time)
+        {
+            using (MinecraftPacketStream stream = new MinecraftPacketStream())
+            {
+                stream.WriteByte((byte)MinecraftOpcode.TimeUpdate);
+                stream.WriteLong(time);
+                return stream.ToArray();
+            }
+        }
+
+        public static byte[] GetSetSlot(byte window, short slot, short id, byte count, short uses)
+        {
+            using (MinecraftPacketStream stream = new MinecraftPacketStream())
+            {
+                stream.WriteByte((byte)MinecraftOpcode.SetSlot);
+                stream.WriteByte(window);
+                stream.WriteShort(slot);
+                stream.WriteShort(id);
+                stream.WriteByte(count);
+                stream.WriteShort(uses);
+                return stream.ToArray();
+            }
+        }
+
+        public static byte[] GetEntityEquipment(uint eid, short slot, short itemID, short damage)
+        {
+            using (MinecraftPacketStream stream = new MinecraftPacketStream())
+            {
+                stream.WriteByte((byte)MinecraftOpcode.EntityEquipment);
+                stream.WriteUint(eid);
+                stream.WriteShort(slot);
+                stream.WriteShort(itemID);
+                stream.WriteShort(damage);
+                return stream.ToArray();
+            }
+        }
+
+        public static byte[] GetNamedEntitySpawn(uint eid, string username, int x, int y, int z, byte yaw, byte pitch, short currentItem)
+        {
+            using (MinecraftPacketStream stream = new MinecraftPacketStream())
+            {
+                stream.WriteByte((byte)MinecraftOpcode.NamedEntitySpawn);
+                stream.WriteUint(eid);
+                stream.WriteString(username);
+                stream.WriteInt(x);
+                stream.WriteInt(y);
+                stream.WriteInt(z);
+                stream.WriteByte(yaw);
+                stream.WriteByte(pitch);
+                stream.WriteShort(currentItem);
                 return stream.ToArray();
             }
         }

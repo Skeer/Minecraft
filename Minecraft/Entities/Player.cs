@@ -6,17 +6,21 @@ using Minecraft.Map;
 using Minecraft.Net;
 using NBTLibrary;
 using Minecraft.Packet;
+using Minecraft.Command;
 
 namespace Minecraft.Entities
 {
     public class Player : Entity
     {
         private List<Chunk> LoadedChunks = new List<Chunk>();
-        private Chunk CurrentChunk;
-        private MinecraftClient Client;
+        private List<Player> LoadedPlayers = new List<Player>();
 
         public bool OnGround { get; set; }
+        public short HoldingSlot { get; set; }
         public double Stance { get; set; }
+        public double MotionX { get; set; }
+        public double MotionY { get; set; }
+        public double MotionZ { get; set; }
         public float FallDistance { get; set; }
         public int Dimension { get; set; } // Currently not needed, but if I want nether, this is needed.
         public short Air { get; set; }
@@ -26,16 +30,21 @@ namespace Minecraft.Entities
         public short Health { get; set; }
         public short HurtTime { get; set; }
         public string Username { get; set; }
+        public uint EID { get; set; }
+        public Chunk CurrentChunk { get; set; }
         public Dictionary<byte, Item> Inventory = new Dictionary<byte, Item>();
-        public double MotionX { get; set; }
-        public double MotionY { get; set; }
-        public double MotionZ { get; set; }
+        public MinecraftClient Client { get; set; }
+        public MinecraftRank Rank { get; set; }
         public Rotation Rotation { get; set; }
 
-        public Player(MinecraftClient client, string username)
+
+        public Player(MinecraftClient client, string username, uint eid)
         {
             Client = client;
             Username = username;
+            EID = eid;
+
+            Rank = MinecraftServer.Instance.GetRank(Username);
 
             if (!Load())
             {
@@ -90,7 +99,7 @@ namespace Minecraft.Entities
 
                     Tag[] pos = (Tag[])file.FindPayload("Pos");
                     X = (double)pos[0].Payload;
-                    Y = (double)pos[1].Payload + 5;
+                    Y = (double)pos[1].Payload + 3;
                     Z = (double)pos[2].Payload;
 
                     AttackTime = (short)file.FindPayload("AttackTime");
@@ -110,6 +119,28 @@ namespace Minecraft.Entities
             {
                 return false;
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="x">The x coordinate in chunks (16 blocks).</param>
+        /// <param name="z">The z coordinate in chunks (16 blocks).</param>
+        /// <returns></returns>
+        public bool IsInRange(int x, int z)
+        {
+            if (Math.Abs(CurrentChunk.X - x) + Math.Abs(CurrentChunk.Z - z) < 8)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public void AddInventoryItem(Item t)
+        {
+            //TODO: Find better way to do this
+            Item i = new Item(t);
+            Inventory.Add(i.Slot, i);
         }
 
         public void Save()
@@ -342,7 +373,97 @@ namespace Minecraft.Entities
 
                 LoadedChunks = chunks;
                 CurrentChunk = currentChunk;
+
+
+                //TODO: This section is truely flawed... Fix
+                List<Player> players = new List<Player>();
+                foreach (Player p in MinecraftServer.Instance.Players.Values)
+                {
+                    if (p != this && p.IsInRange(CurrentChunk.X, CurrentChunk.Z))
+                    {
+                        players.Add(p);
+                    }
+                }
+
+                short currentItemID = 0;
+                short currentItemDamage = 0;
+                byte key = (byte)(HoldingSlot + 36);
+                if (Inventory.ContainsKey(key))
+                {
+                    currentItemID = Inventory[key].ID;
+                    currentItemDamage = Inventory[key].Damage;
+                }
+
+                foreach (Player p in players)
+                {
+                    if (!LoadedPlayers.Contains(p))
+                    {
+                        p.Client.Send(MinecraftPacketCreator.GetNamedEntitySpawn(EID, Username, (int)(X * 32), (int)(Y * 32), (int)(Z * 32), (byte)Rotation.Yaw, (byte)Rotation.Pitch, currentItemID));
+                        for (byte b = 5; b <= 8; ++b)
+                        {
+                            if (Inventory.ContainsKey(b))
+                            {
+                                Item i = Inventory[b];
+                                p.Client.Send(MinecraftPacketCreator.GetEntityEquipment(EID, (short)(b - 4), i.ID, i.Damage));
+                            }
+                            else
+                            {
+                                p.Client.Send(MinecraftPacketCreator.GetEntityEquipment(EID, (short)(b - 4), -1, 0));
+                            }
+                        }
+                        p.Client.Send(MinecraftPacketCreator.GetEntityEquipment(EID, 0, currentItemID, currentItemDamage));
+
+                        if (!p.LoadedPlayers.Contains(this))
+                        {
+                            short pCurrentItemID = 0;
+                            short pCurrentItemDamage = 0;
+                            byte pKey = (byte)(p.HoldingSlot + 36);
+                            if (p.Inventory.ContainsKey(pKey))
+                            {
+                                pCurrentItemID = p.Inventory[pKey].ID;
+                                pCurrentItemDamage = p.Inventory[pKey].Damage;
+                            }
+                            Client.Send(MinecraftPacketCreator.GetNamedEntitySpawn(p.EID, p.Username, (int)(p.X * 32), (int)(p.Y * 32), (int)(p.Z * 32), (byte)p.Rotation.Yaw, (byte)p.Rotation.Pitch, pCurrentItemID));
+
+                            for (byte b = 5; b <= 8; ++b)
+                            {
+                                if (p.Inventory.ContainsKey(b))
+                                {
+                                    Item i = p.Inventory[b];
+                                    Client.Send(MinecraftPacketCreator.GetEntityEquipment(p.EID, (short)(b - 4), i.ID, i.Damage));
+                                }
+                                else
+                                {
+                                    Client.Send(MinecraftPacketCreator.GetEntityEquipment(p.EID, (short)(b - 4), -1, 0));
+                                }
+                            }
+                            Client.Send(MinecraftPacketCreator.GetEntityEquipment(p.EID, 0, pCurrentItemID, pCurrentItemDamage));
+                            p.LoadedPlayers.Add(this);
+                        }
+                    }
+                }
+
+                LoadedPlayers = players;
             }
+        }
+
+        public void ToSpawn()
+        {
+            Move(MinecraftServer.Instance.SpawnX, MinecraftServer.Instance.SpawnY, MinecraftServer.Instance.SpawnZ);
+        }
+
+        public void Move(double x, double y, double z)
+        {
+            X = x + 0.5;
+            Y = y + 5;
+            Z = z + 0.5;
+
+            Rotation.Yaw = 0;
+            Rotation.Pitch = 0;
+
+            Update();
+
+            Client.Send(MinecraftPacketCreator.GetPositionLook(X, Y, Z, Rotation, false));
         }
     }
 }

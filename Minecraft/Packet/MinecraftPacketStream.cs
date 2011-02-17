@@ -134,5 +134,12 @@ namespace Minecraft.Packet
             Write(buffer, 0, buffer.Length);
         }
 
+        public uint ReadUint()
+        {
+            byte[] buffer = new byte[4];
+            Read(buffer, 0, buffer.Length);
+            ReverseBytes(buffer);
+            return BitConverter.ToUInt32(buffer, 0);
+        }
     }
 }
