@@ -23,10 +23,10 @@ namespace Minecraft.Handlers
                             client.Player.Z = stream.ReadDouble();
                             if (stream.Length - stream.Position >= 4)
                             {
-                                client.Player.Rotation.Yaw = stream.ReadFloat();
+                                client.Player.Yaw = stream.ReadFloat();
                                 if (stream.Length - stream.Position >= 4)
                                 {
-                                    client.Player.Rotation.Pitch = stream.ReadFloat();
+                                    client.Player.Pitch = stream.ReadFloat();
                                     if (stream.Length - stream.Position >= 1)
                                     {
                                         client.Player.OnGround = stream.ReadBool();

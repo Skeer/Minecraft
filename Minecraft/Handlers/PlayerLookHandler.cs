@@ -15,8 +15,8 @@ namespace Minecraft.Handlers
                     float pitch = stream.ReadFloat();
                     if (stream.Length - stream.Position >= 1)
                     {
-                        client.Player.Rotation.Yaw = yaw;
-                        client.Player.Rotation.Pitch = pitch;
+                        client.Player.Yaw = yaw;
+                        client.Player.Pitch = pitch;
                         client.Player.OnGround = stream.ReadBool();
                         return true;
                     }

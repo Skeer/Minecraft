@@ -112,6 +112,8 @@ namespace Minecraft.Net
 
                     ProcessReceived();
 
+                    ResetConnectionTimer();
+
                     Client.BeginReceive(Buffer, 0, Buffer.Length, SocketFlags.None, OnReceive, null);
                 }
                 else
@@ -137,11 +139,21 @@ namespace Minecraft.Net
             int length = Client.EndSend(result);
         }
 
-        private void Disconnected()
+        public void Disconnected(string message = "")
         {
-            Log.Info("Client disconnected from {0}.", EndPoint);
-            Player.Save();
-            Dispose();
+            if (!Disposed)
+            {
+                if (message == "")
+                {
+                    Log.Info("Client disconnected from {0}.", EndPoint);
+                }
+                else
+                {
+                    Log.Info("Client disconnected from {0}: {1}.", EndPoint, message);
+                }
+                Player.Save();
+                Dispose();
+            }
         }
 
         private void OnDisconnect(IAsyncResult result)
@@ -230,9 +242,11 @@ namespace Minecraft.Net
 
             Client.Send(MinecraftPacketCreator.GetSpawnPosition(MinecraftServer.Instance.SpawnX, MinecraftServer.Instance.SpawnY, MinecraftServer.Instance.SpawnZ));
 
-            Client.Send(MinecraftPacketCreator.GetPositionLook(Player.X, Player.Y, Player.Z, Player.Rotation, Player.OnGround));
+            Client.Send(MinecraftPacketCreator.GetPositionLook(Player.X, Player.Y, Player.Z, Player.Yaw, Player.Pitch, Player.OnGround));
 
             Client.Send(MinecraftPacketCreator.GetTimeUpdate(MinecraftServer.Instance.Time));
         }
+
+        private bool SuppressMessage = false;
     }
 }

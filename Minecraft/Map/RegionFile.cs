@@ -9,59 +9,59 @@ namespace Minecraft.Map
 {
     public class RegionFile : IDisposable, IEquatable<RegionFile>
     {
-        public const int Coord1sPerRegion = 32;
-        public const int Coord2sPerRegion = 32;
-        public const int ChunksPerRegion = Coord1sPerRegion * Coord2sPerRegion;
-        public readonly int RegionCoord1, RegionCoord2;
-        public readonly int MinChunkCoord1, MaxChunkCoord1;
-        public readonly int MinChunkCoord2, MaxChunkCoord2;
+        public const int XCoords = 32;
+        public const int ZCoords = 32;
+        public const int TotalChunks = XCoords * ZCoords;
+        public readonly int X, Z;
+        public readonly int MinX, MaxX;
+        public readonly int MinZ, MaxZ;
         readonly FileStream Stream;
         readonly object LockObj = new object();
         int Disposed;
         bool AnyChanges;
 
-        public readonly long[] ChunkLocations = new long[ChunksPerRegion];
-        public readonly int[] ChunkLengths = new int[ChunksPerRegion];
-        public readonly long[] ChunkTimeStamps = new long[ChunksPerRegion];
+        public readonly long[] ChunkLocations = new long[TotalChunks];
+        public readonly int[] ChunkLengths = new int[TotalChunks];
+        public readonly long[] ChunkTimeStamps = new long[TotalChunks];
 
-        public RegionFile(int RegionCoord1, int RegionCoord2, string FileName)
+        public RegionFile(int x, int z, string fileName)
         {
-            this.RegionCoord1 = RegionCoord1;
-            this.RegionCoord2 = RegionCoord2;
-            MinChunkCoord1 = RegionCoord1 * Coord1sPerRegion;
-            MinChunkCoord2 = RegionCoord2 * Coord2sPerRegion;
-            MaxChunkCoord1 = RegionCoord1 * Coord1sPerRegion + Coord1sPerRegion - 1;
-            MaxChunkCoord2 = RegionCoord2 * Coord2sPerRegion + Coord2sPerRegion - 1;
-            Stream = new FileStream(FileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
+            this.X = x;
+            this.Z = z;
+            MinX = x * XCoords;
+            MinZ = z * ZCoords;
+            MaxX = x * XCoords + XCoords - 1;
+            MaxZ = z * ZCoords + ZCoords - 1;
+            Stream = new FileStream(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
             ReadHeader();
             _DeferWriteHeader.DeferEnded = DeferWriteHeaderEnded;
         }
-        public RegionFile(int RegionCoord1, int RegionCoord2)
-            : this(RegionCoord1, RegionCoord2, Path.Combine(MinecraftServer.Instance.Path, "region", "r." + RegionCoord1.ToString() + "." + RegionCoord2.ToString() + ".mcr"))
+        public RegionFile(int x, int z)
+            : this(x, z, Path.Combine(MinecraftServer.Instance.Path, "region", "r." + x.ToString() + "." + z.ToString() + ".mcr"))
         {
         }
 
-        public static void ChunkCoordToRegionCoord(int ChunkCoord1, int ChunkCoord2, out int RegionCoord1, out int RegionCoord2)
+        public static void ChunkCoordToRegionCoord(int cx, int cz, out int x, out int z)
         {
-            RegionCoord1 = (int)Math.Floor((double)ChunkCoord1 / Coord1sPerRegion);
-            RegionCoord2 = (int)Math.Floor((double)ChunkCoord2 / Coord2sPerRegion);
+            x = (int)Math.Floor((double)cx / XCoords);
+            z = (int)Math.Floor((double)cz / ZCoords);
         }
 
         void ReadHeader()
         {
-            byte[] buf = new byte[4 * ChunksPerRegion];
+            byte[] buf = new byte[4 * TotalChunks];
             lock (LockObj)
             {
                 if (Stream.Read(buf, 0, buf.Length) != buf.Length)
                     throw new FormatException();
-                for (int x = 0; x < ChunksPerRegion; ++x)
+                for (int x = 0; x < TotalChunks; ++x)
                 {
                     ChunkLocations[x] = 4096 * (long)(((int)buf[x * 4 + 0] << 16) + ((int)buf[x * 4 + 1] << 8) + ((int)buf[x * 4 + 2]));
                     ChunkLengths[x] = 4096 * (int)buf[x * 4 + 3];
                 }
                 if (Stream.Read(buf, 0, buf.Length) != buf.Length)
                     throw new FormatException();
-                for (int x = 0; x < ChunksPerRegion; ++x)
+                for (int x = 0; x < TotalChunks; ++x)
                 {
                     ChunkTimeStamps[x] = (long)(((int)buf[x * 4 + 0] << 24) + ((int)buf[x * 4 + 1] << 16) + ((int)buf[x * 4 + 2] << 8) + ((int)buf[x * 4 + 3]));
                 }
@@ -71,20 +71,20 @@ namespace Minecraft.Map
         {
             if (_DeferWriteHeader.Deferred)
                 return;
-            byte[] buf = new byte[8 * ChunksPerRegion];
+            byte[] buf = new byte[8 * TotalChunks];
             lock (LockObj)
             {
-                for (int x = 0; x < ChunksPerRegion; ++x)
+                for (int x = 0; x < TotalChunks; ++x)
                 {
                     int loc = (int)(ChunkLocations[x] / 4096);
                     buf[x * 4 + 0] = (byte)(loc >> 16);
                     buf[x * 4 + 1] = (byte)(loc >> 8);
                     buf[x * 4 + 2] = (byte)loc;
                     buf[x * 4 + 3] = (byte)(ChunkLengths[x] / 4096);
-                    buf[x * 4 + ChunksPerRegion * 4 + 0] = (byte)(ChunkTimeStamps[x] >> 24);
-                    buf[x * 4 + ChunksPerRegion * 4 + 1] = (byte)(ChunkTimeStamps[x] >> 16);
-                    buf[x * 4 + ChunksPerRegion * 4 + 2] = (byte)(ChunkTimeStamps[x] >> 8);
-                    buf[x * 4 + ChunksPerRegion * 4 + 3] = (byte)ChunkTimeStamps[x];
+                    buf[x * 4 + TotalChunks * 4 + 0] = (byte)(ChunkTimeStamps[x] >> 24);
+                    buf[x * 4 + TotalChunks * 4 + 1] = (byte)(ChunkTimeStamps[x] >> 16);
+                    buf[x * 4 + TotalChunks * 4 + 2] = (byte)(ChunkTimeStamps[x] >> 8);
+                    buf[x * 4 + TotalChunks * 4 + 3] = (byte)ChunkTimeStamps[x];
                 }
                 Stream.Position = 0;
                 Stream.Write(buf, 0, buf.Length);
@@ -121,20 +121,20 @@ namespace Minecraft.Map
                 }
         }
 
-        public bool ChunkExists(int ChunkCoord1, int ChunkCoord2)
+        public bool ChunkExists(int cx, int cz)
         {
-            ValidateChunkCoords(ChunkCoord1, ChunkCoord2);
-            return ChunkLocations[(ChunkCoord1 % Coord1sPerRegion) + (ChunkCoord2 % Coord2sPerRegion) * Coord1sPerRegion] >= ChunksPerRegion * 8;
+            ValidateChunkCoords(cx, cz);
+            return ChunkLocations[(cx % XCoords) + (cz % ZCoords) * XCoords] >= TotalChunks * 8;
         }
-        public byte[] GetChunkData(int ChunkCoord1, int ChunkCoord2)
+        public byte[] GetChunkData(int cx, int cz)
         {
-            ValidateChunkCoords(ChunkCoord1, ChunkCoord2);
+            ValidateChunkCoords(cx, cz);
             lock (LockObj)
             {
                 if (Disposed != 0)
                     throw new ObjectDisposedException("RegionFile");
-                long pos = ChunkLocations[(ChunkCoord1 / Coord1sPerRegion) + (ChunkCoord2 / Coord2sPerRegion) * Coord1sPerRegion];
-                if (pos < ChunksPerRegion * 8)
+                long pos = ChunkLocations[(cx - MinX) + (cz  - MinZ) * XCoords];
+                if (pos < TotalChunks * 8)
                     return null;
                 byte[] buf = new byte[4];
                 Stream.Position = pos;
@@ -157,28 +157,28 @@ namespace Minecraft.Map
                 }
             }
         }
-        public void SetChunkData(int ChunkCoord1, int ChunkCoord2, byte[] ChunkData, long CurrentTimeStamp)
+        public void SetChunkData(int cx, int cz, byte[] data, long timeStamp)
         {
-            ValidateChunkCoords(ChunkCoord1, ChunkCoord2);
-            int c1 = ChunkCoord1 % Coord1sPerRegion;
-            int c2 = ChunkCoord2 % Coord2sPerRegion;
-            int cindex = c1 + c2 * Coord1sPerRegion;
+            ValidateChunkCoords(cx, cz);
+            int c1 = cx % XCoords;
+            int c2 = cz % ZCoords;
+            int cindex = c1 + c2 * XCoords;
             lock (LockObj)
             {
                 if (Disposed != 0)
                     throw new ObjectDisposedException("RegionFile");
                 AnyChanges = true;
-                ChunkTimeStamps[cindex] = CurrentTimeStamp;
-                if (ChunkData == null || ChunkData.Length == 0)
+                ChunkTimeStamps[cindex] = timeStamp;
+                if (data == null || data.Length == 0)
                 {
                     ChunkLocations[cindex] = 0;
                     ChunkLengths[cindex] = 0;
                     return;
                 }
                 byte[] buf;
-                using (MemoryStream compstream = new MemoryStream(ChunkData.Length))
+                using (MemoryStream compstream = new MemoryStream(data.Length))
                 {
-                    using (DeflateStream ds = new DeflateStream(new MemoryStream(ChunkData), CompressionMode.Compress, false))
+                    using (DeflateStream ds = new DeflateStream(new MemoryStream(data), CompressionMode.Compress, false))
                         ds.CopyTo(compstream);
                     buf = compstream.ToArray();
                 }
@@ -237,7 +237,7 @@ namespace Minecraft.Map
         {
             lock (LockObj)
             {
-                long chunkdatalength = Stream.Length - 8 * ChunksPerRegion;
+                long chunkdatalength = Stream.Length - 8 * TotalChunks;
                 if (chunkdatalength == 0)
                     return 0;
                 long chunkdataused = ChunkLengths.Sum(x => (long)x);
@@ -266,20 +266,21 @@ namespace Minecraft.Map
                 }
             }
         }
-        void ValidateChunkCoords(int ChunkCoord1, int ChunkCoord2)
+
+        void ValidateChunkCoords(int cx, int cz)
         {
-            if (ChunkCoord1 < MinChunkCoord1 || ChunkCoord1 > MaxChunkCoord1 ||
-                ChunkCoord2 < MinChunkCoord2 || ChunkCoord2 > MaxChunkCoord2)
+            if (cx < MinX || cx > MaxX ||
+                cz < MinZ || cz > MaxZ)
                 throw new ArgumentException("The chunk coordinates are not in this region");
         }
 
         public bool Equals(RegionFile other)
         {
-            return other != null && other.RegionCoord1 == RegionCoord1 && other.RegionCoord2 == RegionCoord2;
+            return other != null && other.X == X && other.Z == Z;
         }
         public override int GetHashCode()
         {
-            return RegionCoord1 * Coord1sPerRegion + RegionCoord2;
+            return X * XCoords + Z;
         }
     }
 }

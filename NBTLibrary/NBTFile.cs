@@ -10,7 +10,7 @@ namespace NBTLibrary
         private NBTStream Stream = new NBTStream();
         public Tag Root { get; set; }
         private bool Disposed = false;
-        private string Path;
+        public string Path { get; set; }
 
         public static NBTFile Open(string path)
         {

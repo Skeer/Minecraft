@@ -7,7 +7,7 @@ namespace Minecraft.Handlers
     {
         public bool HandlePacket(MinecraftClient client, MinecraftPacketStream stream)
         {
-            client.ResetConnectionTimer();
+            //client.ResetConnectionTimer();
             return true;
         }
     }

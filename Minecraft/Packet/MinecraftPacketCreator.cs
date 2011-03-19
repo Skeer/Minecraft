@@ -101,7 +101,7 @@ namespace Minecraft.Packet
             }
         }
 
-        public static byte[] GetPositionLook(double x, double y, double z, Rotation rotation, bool onGround)
+        public static byte[] GetPositionLook(double x, double y, double z, float yaw, float pitch, bool onGround)
         {
             using (MinecraftPacketStream stream = new MinecraftPacketStream())
             {
@@ -110,8 +110,8 @@ namespace Minecraft.Packet
                 stream.WriteDouble(y);
                 stream.WriteDouble(y + 1.62); // dunno what 1.62 means...
                 stream.WriteDouble(z);
-                stream.WriteFloat(rotation.Yaw);
-                stream.WriteFloat(rotation.Pitch);
+                stream.WriteFloat(yaw);
+                stream.WriteFloat(pitch);
                 stream.WriteBool(onGround);
                 return stream.ToArray();
             }

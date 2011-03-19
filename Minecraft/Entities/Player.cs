@@ -18,65 +18,97 @@ namespace Minecraft.Entities
 
         public bool OnGround
         {
-            get
-            {
-                return  (byte)Data["OnGround"].Payload == 0x01;
-            }
-            set
-            {
-                Data["OnGround"].Payload = value ? (byte)0x01 : (byte)0x00;
-            }
+            get { return (byte)Data["OnGround"].Payload == 0x01; }
+            set { Data["OnGround"].Payload = value ? (byte)0x01 : (byte)0x00; }
         }
         public short HoldingSlot { get; set; }
         public double Stance { get; set; }
         public double MotionX
         {
-            get
-            {
-                return (double)((List<Tag>)Data["Motion"].Payload)[0].Payload;
-            }
-            set
-            {
-                ((List<Tag>)Data["Motion"].Payload)[0].Payload = value;
-            }
+            get { return (double)((List<Tag>)Data["Motion"].Payload)[0].Payload; }
+            set { ((List<Tag>)Data["Motion"].Payload)[0].Payload = value; }
         }
         public double MotionY
         {
-            get
-            {
-                return (double)((List<Tag>)Data["Motion"].Payload)[1].Payload;
-            }
-            set
-            {
-                ((List<Tag>)Data["Motion"].Payload)[1].Payload = value;
-            }
+            get { return (double)((List<Tag>)Data["Motion"].Payload)[1].Payload; }
+            set { ((List<Tag>)Data["Motion"].Payload)[1].Payload = value; }
         }
         public double MotionZ
         {
-            get
-            {
-                return (double)((List<Tag>)Data["Motion"].Payload)[2].Payload;
-            }
-            set
-            {
-                ((List<Tag>)Data["Motion"].Payload)[2].Payload = value;
-            }
+            get { return (double)((List<Tag>)Data["Motion"].Payload)[2].Payload; }
+            set { ((List<Tag>)Data["Motion"].Payload)[2].Payload = value; }
         }
-        public float FallDistance { get; set; }
-        public int Dimension { get; set; } // Currently not needed, but if I want nether, this is needed.
-        public short Air { get; set; }
-        public short AttackTime { get; set; }
-        public short DeathTime { get; set; }
-        public short Fire { get; set; }
-        public short Health { get; set; }
-        public short HurtTime { get; set; }
+        public float FallDistance
+        {
+            get { return (float)Data["FallDistance"].Payload; }
+            set { Data["FallDistance"].Payload = value; }
+        }
+        public int Dimension
+        {
+            get { return (int)Data["Dimension"].Payload; }
+            set { Data["Dimension"].Payload = value; }
+        }
+        public short Air
+        {
+            get { return (short)Data["Air"].Payload; }
+            set { Data["Air"].Payload = value; }
+        }
+        public short AttackTime
+        {
+            get { return (short)Data["AttackTime"].Payload; }
+            set { Data["AttackTime"].Payload = value; }
+        }
+        public short DeathTime
+        {
+            get { return (short)Data["DeathTime"].Payload; }
+            set { Data["DeathTime"].Payload = value; }
+        }
+        public short Fire
+        {
+            get { return (short)Data["Fire"].Payload; }
+            set { Data["Fire"].Payload = value; }
+        }
+        public short Health
+        {
+            get { return (short)Data["Health"].Payload; }
+            set { Data["Health"].Payload = value; }
+        }
+        public short HurtTime
+        {
+            get { return (short)Data["HurtTime"].Payload; }
+            set { Data["HurtTime"].Payload = value; }
+        }
         public string Username { get; set; }
         public uint EID { get; set; }
         public Chunk CurrentChunk { get; set; }
         public Dictionary<byte, Item> Inventory = new Dictionary<byte, Item>();
         public MinecraftClient Client { get; set; }
         public MinecraftRank Rank { get; set; }
-        public Rotation Rotation { get; set; }
+        public float Yaw
+        {
+            get { return (float)((List<Tag>)Data["Rotation"].Payload)[0].Payload; }
+            set { ((List<Tag>)Data["Rotation"].Payload)[0].Payload = value; }
+        }
+        public float Pitch
+        {
+            get { return (float)((List<Tag>)Data["Rotation"].Payload)[1].Payload; }
+            set { ((List<Tag>)Data["Rotation"].Payload)[1].Payload = value; }
+        }
+        public new double X
+        {
+            get { return (double)((List<Tag>)Data["Pos"].Payload)[0].Payload; }
+            set { ((List<Tag>)Data["Pos"].Payload)[0].Payload = value; }
+        }
+        public new double Y
+        {
+            get { return (double)((List<Tag>)Data["Pos"].Payload)[1].Payload; }
+            set { ((List<Tag>)Data["Pos"].Payload)[1].Payload = value; }
+        }
+        public new double Z
+        {
+            get { return (double)((List<Tag>)Data["Pos"].Payload)[2].Payload; }
+            set { ((List<Tag>)Data["Pos"].Payload)[2].Payload = value; }
+        }
 
 
         public Player(MinecraftClient client, string username, uint eid)
@@ -89,6 +121,140 @@ namespace Minecraft.Entities
 
             if (!Load())
             {
+                // Default shit
+                Data = new NBTFile();
+                Data.Path = Path.Combine(MinecraftServer.Instance.Path, "players", Username + ".dat");
+
+                Data.Root = new Tag();
+                Data.Root.Type = TagType.Compound;
+
+                List<Tag> payload = new List<Tag>();
+
+                Tag motion = new Tag();
+                motion.Type = TagType.List;
+                motion.Name = "Motion";
+
+                List<Tag> motionPayload = new List<Tag>();
+
+                Tag motionx = new Tag();
+                motionx.Type = TagType.Double;
+                motionPayload.Add(motionx);
+
+                Tag motiony = new Tag();
+                motiony.Type = TagType.Double;
+                motionPayload.Add(motiony);
+
+                Tag motionz = new Tag();
+                motionz.Type = TagType.Double;
+                motionPayload.Add(motionz);
+
+                motion.Payload = motionPayload;
+
+                payload.Add(motion);
+
+                Tag onGround = new Tag();
+                onGround.Type = TagType.Byte;
+                onGround.Name = "OnGround";
+
+                payload.Add(onGround);
+
+                Tag hurtTime = new Tag();
+                hurtTime.Type = TagType.Short;
+                hurtTime.Name = "HurtTime";
+
+                payload.Add(hurtTime);
+
+                Tag health = new Tag();
+                health.Type = TagType.Short;
+                health.Name = "Health";
+
+                payload.Add(health);
+
+                Tag dimension = new Tag();
+                dimension.Type = TagType.Int;
+                dimension.Name = "Dimension";
+
+                payload.Add(dimension);
+
+                Tag air = new Tag();
+                air.Type = TagType.Short;
+                air.Name = "Air";
+
+                payload.Add(air);
+
+                Tag inventory = new Tag();
+                inventory.Type = TagType.List;
+                inventory.Name = "Inventory";
+
+                payload.Add(inventory);
+
+                Tag pos = new Tag();
+                pos.Type = TagType.List;
+                pos.Name = "Pos";
+
+                List<Tag> posPayload = new List<Tag>();
+
+                Tag posx = new Tag();
+                posx.Type = TagType.Double;
+                posPayload.Add(posx);
+
+                Tag posy = new Tag();
+                posy.Type = TagType.Double;
+                posPayload.Add(posy);
+
+                Tag posz = new Tag();
+                posz.Type = TagType.Double;
+                posPayload.Add(posz);
+
+                pos.Payload = posPayload;
+
+                payload.Add(pos);
+
+                Tag attackTime = new Tag();
+                attackTime.Type = TagType.Short;
+                attackTime.Name = "AttackTime";
+
+                payload.Add(attackTime);
+
+                Tag fire = new Tag();
+                fire.Type = TagType.Short;
+                fire.Name = "Fire";
+
+                payload.Add(fire);
+
+                Tag fallDistance = new Tag();
+                fallDistance.Type = TagType.Float;
+                fallDistance.Name = "FallDistance";
+
+                payload.Add(fallDistance);
+
+                Tag rotation = new Tag();
+                rotation.Type = TagType.List;
+                rotation.Name = "Rotation";
+
+                List<Tag> rotationPayload = new List<Tag>();
+
+                Tag yaw = new Tag();
+                yaw.Type = TagType.Float;
+                rotationPayload.Add(yaw);
+
+                Tag pitch = new Tag();
+                pitch.Type = TagType.Float;
+                rotationPayload.Add(pitch);
+
+                rotation.Payload = rotationPayload;
+
+                payload.Add(rotation);
+
+                Tag deathTime = new Tag();
+                deathTime.Type = TagType.Short;
+                deathTime.Name = "DeathTime";
+
+                payload.Add(deathTime);
+
+                Data.Root.Payload = payload;
+
+
                 // Load new configuration structure...
                 OnGround = true;
                 FallDistance = 0;
@@ -103,7 +269,10 @@ namespace Minecraft.Entities
                 Y = MinecraftServer.Instance.SpawnY + 3;
                 Z = MinecraftServer.Instance.SpawnZ + 0.5;
                 Stance = Y;
-                Rotation = new Rotation();
+                Yaw = 0;
+                Pitch = 0;
+
+                Save();
             }
         }
 
@@ -113,45 +282,29 @@ namespace Minecraft.Entities
             {
                 Data = NBTFile.Open(Path.Combine(MinecraftServer.Instance.Path, "players", Username + ".dat"));
 
-                HurtTime = (short)Data.FindPayload("HurtTime");
-
-                Health = (short)Data.FindPayload("Health");
-
-                Dimension = (int)Data.FindPayload("Dimension");
-
-                Air = (short)Data.FindPayload("Air");
-
                 List<Tag> inventory = (List<Tag>)Data.FindPayload("Inventory");
                 foreach (Tag tag in inventory)
                 {
                     Item i = new Item();
-                    i.ID = (short)Data.FindPayload("id", tag);
-                    i.Damage = (short)Data.FindPayload("Damage", tag);
-                    i.Count = (byte)Data.FindPayload("Count", tag);
-                    i.Slot = (byte)Data.FindPayload("Slot", tag);
+                    i.ID = (short)tag["id"].Payload;
+                    i.Damage = (short)tag["Damage"].Payload;
+                    i.Count = (byte)tag["Count"].Payload;
+                    i.Slot = (byte)tag["Slot"].Payload;
                     Inventory.Add(i.Slot, i);
                 }
 
-                List<Tag> pos = (List<Tag>)Data.FindPayload("Pos");
-                X = (double)pos[0].Payload;
-                Y = (double)pos[1].Payload + 3;
-                Z = (double)pos[2].Payload;
-
-                AttackTime = (short)Data.FindPayload("AttackTime");
-
-                Fire = (short)Data.FindPayload("Fire");
-
-                FallDistance = (float)Data.FindPayload("FallDistance");
-
-                List<Tag> rotation = (List<Tag>)Data.FindPayload("Rotation");
-                Rotation = new Rotation() { Yaw = (float)rotation[0].Payload, Pitch = (float)rotation[1].Payload };
-
-                DeathTime = (short)Data.FindPayload("DeathTime");
+                Y += 3;
 
                 return true;
             }
             catch
             {
+                // NOTE: Is this needed?
+                if (Data != null)
+                {
+                    Data.Dispose();
+                    Data = null;
+                }
                 return false;
             }
         }
@@ -180,203 +333,55 @@ namespace Minecraft.Entities
 
         public void Save()
         {
+            SyncInventory();
             Data.Save();
-            return;
-            //TODO: There has to be a better way to do this...
-            using (NBTFile file = new NBTFile())
+        }
+
+        private void SyncInventory()
+        {
+            List<Tag> inventoryPayload = new List<Tag>();
+
+            foreach (Item i in Inventory.Values)
             {
-                file.Root = new Tag();
-                file.Root.Type = TagType.Compound;
+                Tag item = new Tag();
+                item.Type = TagType.Compound;
 
-                List<Tag> payload = new List<Tag>();
+                List<Tag> itemPayload = new List<Tag>();
 
-                Tag motion = new Tag();
-                motion.Type = TagType.List;
-                motion.Name = "Motion";
+                Tag id = new Tag();
+                id.Type = TagType.Short;
+                id.Name = "id";
+                id.Payload = i.ID;
 
-                List<Tag> motionPayload = new List<Tag>();
+                itemPayload.Add(id);
 
-                Tag motionx = new Tag();
-                motionx.Type = TagType.Double;
-                motionx.Payload = MotionX;
-                motionPayload.Add(motionx);
+                Tag damage = new Tag();
+                damage.Type = TagType.Short;
+                damage.Name = "Damage";
+                damage.Payload = i.Damage;
 
-                Tag motiony = new Tag();
-                motiony.Type = TagType.Double;
-                motiony.Payload = MotionY;
-                motionPayload.Add(motiony);
+                itemPayload.Add(damage);
 
-                Tag motionz = new Tag();
-                motionz.Type = TagType.Double;
-                motionz.Payload = MotionZ;
-                motionPayload.Add(motionz);
+                Tag count = new Tag();
+                count.Type = TagType.Byte;
+                count.Name = "Count";
+                count.Payload = i.Count;
 
-                motion.Payload = motionPayload;
+                itemPayload.Add(count);
 
-                payload.Add(motion);
+                Tag slot = new Tag();
+                slot.Type = TagType.Byte;
+                slot.Name = "Slot";
+                slot.Payload = i.Slot;
 
-                Tag onGround = new Tag();
-                onGround.Type = TagType.Byte;
-                onGround.Name = "OnGround";
-                onGround.Payload = OnGround ? 0x01 : 0x00;
+                itemPayload.Add(slot);
 
-                payload.Add(onGround);
+                item.Payload = itemPayload;
 
-                Tag hurtTime = new Tag();
-                hurtTime.Type = TagType.Short;
-                hurtTime.Name = "HurtTime";
-                hurtTime.Payload = HurtTime;
-
-                payload.Add(hurtTime);
-
-                Tag health = new Tag();
-                health.Type = TagType.Short;
-                health.Name = "Health";
-                health.Payload = Health;
-
-                payload.Add(health);
-
-                Tag dimension = new Tag();
-                dimension.Type = TagType.Int;
-                dimension.Name = "Dimension";
-                dimension.Payload = Dimension;
-
-                payload.Add(dimension);
-
-                Tag air = new Tag();
-                air.Type = TagType.Short;
-                air.Name = "Air";
-                air.Payload = Air;
-
-                payload.Add(air);
-
-                Tag inventory = new Tag();
-                inventory.Type = TagType.List;
-                inventory.Name = "Inventory";
-
-                List<Tag> inventoryPayload = new List<Tag>();
-
-                foreach (Item i in Inventory.Values)
-                {
-                    Tag item = new Tag();
-                    item.Type = TagType.Compound;
-
-                    List<Tag> itemPayload = new List<Tag>();
-
-                    Tag id = new Tag();
-                    id.Type = TagType.Short;
-                    id.Name = "id";
-                    id.Payload = i.ID;
-
-                    itemPayload.Add(id);
-
-                    Tag damage = new Tag();
-                    damage.Type = TagType.Short;
-                    damage.Name = "Damage";
-                    damage.Payload = i.Damage;
-
-                    itemPayload.Add(damage);
-
-                    Tag count = new Tag();
-                    count.Type = TagType.Byte;
-                    count.Name = "Count";
-                    count.Payload = i.Count;
-
-                    itemPayload.Add(count);
-
-                    Tag slot = new Tag();
-                    slot.Type = TagType.Byte;
-                    slot.Name = "Slot";
-                    slot.Payload = i.Slot;
-
-                    itemPayload.Add(slot);
-
-                    item.Payload = itemPayload;
-
-                    inventoryPayload.Add(item);
-                }
-
-                inventory.Payload = inventoryPayload;
-
-                payload.Add(inventory);
-
-                Tag pos = new Tag();
-                pos.Type = TagType.List;
-                pos.Name = "Pos";
-
-                List<Tag> posPayload = new List<Tag>();
-
-                Tag posx = new Tag();
-                posx.Type = TagType.Double;
-                posx.Payload = X;
-                posPayload.Add(posx);
-
-                Tag posy = new Tag();
-                posy.Type = TagType.Double;
-                posy.Payload = Y;
-                posPayload.Add(posy);
-
-                Tag posz = new Tag();
-                posz.Type = TagType.Double;
-                posz.Payload = Z;
-                posPayload.Add(posz);
-
-                pos.Payload = posPayload;
-
-                payload.Add(pos);
-
-                Tag attackTime = new Tag();
-                attackTime.Type = TagType.Short;
-                attackTime.Name = "AttackTime";
-                attackTime.Payload = AttackTime;
-
-                payload.Add(attackTime);
-
-                Tag fire = new Tag();
-                fire.Type = TagType.Short;
-                fire.Name = "Fire";
-                fire.Payload = Fire;
-
-                payload.Add(fire);
-
-                Tag fallDistance = new Tag();
-                fallDistance.Type = TagType.Float;
-                fallDistance.Name = "FallDistance";
-                fallDistance.Payload = FallDistance;
-
-                payload.Add(fallDistance);
-
-                Tag rotation = new Tag();
-                rotation.Type = TagType.List;
-                rotation.Name = "Rotation";
-
-                List<Tag> rotationPayload = new List<Tag>();
-
-                Tag yaw = new Tag();
-                yaw.Type = TagType.Float;
-                yaw.Payload = Rotation.Yaw;
-                rotationPayload.Add(yaw);
-
-                Tag pitch = new Tag();
-                pitch.Type = TagType.Float;
-                pitch.Payload = Rotation.Pitch;
-                rotationPayload.Add(pitch);
-
-                rotation.Payload = rotationPayload;
-
-                payload.Add(rotation);
-
-                Tag deathTime = new Tag();
-                deathTime.Type = TagType.Short;
-                deathTime.Name = "DeathTime";
-                deathTime.Payload = DeathTime;
-
-                payload.Add(deathTime);
-
-                file.Root.Payload = payload;
-
-                file.Save(Path.Combine(MinecraftServer.Instance.Path, "players", Username + ".dat"));
+                inventoryPayload.Add(item);
             }
+
+            Data["Inventory"].Payload = inventoryPayload;
         }
 
         /// <summary>
@@ -434,7 +439,7 @@ namespace Minecraft.Entities
                 {
                     if (!LoadedPlayers.Contains(p))
                     {
-                        p.Client.Send(MinecraftPacketCreator.GetNamedEntitySpawn(EID, Username, (int)(X * 32), (int)(Y * 32), (int)(Z * 32), (byte)Rotation.Yaw, (byte)Rotation.Pitch, currentItemID));
+                        p.Client.Send(MinecraftPacketCreator.GetNamedEntitySpawn(EID, Username, (int)(X * 32), (int)(Y * 32), (int)(Z * 32), (byte)Yaw, (byte)Pitch, currentItemID));
                         for (byte b = 5; b <= 8; ++b)
                         {
                             if (Inventory.ContainsKey(b))
@@ -459,7 +464,7 @@ namespace Minecraft.Entities
                                 pCurrentItemID = p.Inventory[pKey].ID;
                                 pCurrentItemDamage = p.Inventory[pKey].Damage;
                             }
-                            Client.Send(MinecraftPacketCreator.GetNamedEntitySpawn(p.EID, p.Username, (int)(p.X * 32), (int)(p.Y * 32), (int)(p.Z * 32), (byte)p.Rotation.Yaw, (byte)p.Rotation.Pitch, pCurrentItemID));
+                            Client.Send(MinecraftPacketCreator.GetNamedEntitySpawn(p.EID, p.Username, (int)(p.X * 32), (int)(p.Y * 32), (int)(p.Z * 32), (byte)p.Yaw, (byte)p.Pitch, pCurrentItemID));
 
                             for (byte b = 5; b <= 8; ++b)
                             {
@@ -494,12 +499,12 @@ namespace Minecraft.Entities
             Y = y + 5;
             Z = z + 0.5;
 
-            Rotation.Yaw = 0;
-            Rotation.Pitch = 0;
+            Yaw = 0;
+            Pitch = 0;
 
             Update();
 
-            Client.Send(MinecraftPacketCreator.GetPositionLook(X, Y, Z, Rotation, false));
+            Client.Send(MinecraftPacketCreator.GetPositionLook(X, Y, Z, Yaw, Pitch, false));
         }
     }
 }

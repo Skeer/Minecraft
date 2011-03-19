@@ -63,9 +63,9 @@
     <Compile Include="Command\MinecraftRank.cs" />
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\Player.cs" />
-    <Compile Include="Entities\Rotation.cs" />
     <Compile Include="Handlers\AnimationHandler.cs" />
     <Compile Include="Handlers\ChatMessageHandler.cs" />
+    <Compile Include="Handlers\DisconnectPacketHandler.cs" />
     <Compile Include="Handlers\HoldingChangeHandler.cs" />
     <Compile Include="Handlers\PlayerBlockPlacementHandler.cs" />
     <Compile Include="Handlers\PlayerDiggingHandler.cs" />

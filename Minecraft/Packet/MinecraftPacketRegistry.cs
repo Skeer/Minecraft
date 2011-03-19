@@ -40,6 +40,7 @@ namespace Minecraft.Packet
             Handlers.Add((byte)MinecraftOpcode.PlayerPosition, new PlayerPositionHandler());
             Handlers.Add((byte)MinecraftOpcode.PlayerLook, new PlayerLookHandler());
             Handlers.Add((byte)MinecraftOpcode.PlayerPositionLook, new PlayerPositionLookHandler());
+            Handlers.Add((byte)MinecraftOpcode.Disconnect, new DisconnectPacketHandler());
         }
     }
 }
