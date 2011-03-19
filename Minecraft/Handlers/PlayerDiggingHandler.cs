@@ -7,13 +7,24 @@ using Minecraft.Packet;
 
 namespace Minecraft.Handlers
 {
+    //enum PlayerDiggingStatus
+    //{
+    //    Started,
+    //    Digging,
+    //    Stopped,
+    //    Broken,
+    //    Dropped
+    //}
+
     class PlayerDiggingHandler : IPacketHandler
     {
         public bool HandlePacket(MinecraftClient client, MinecraftPacketStream stream)
         {
             if (stream.Length - stream.Position >= 1)
             {
+                //PlayerDiggingStatus status = (PlayerDiggingStatus)stream.ReadByte();
                 byte status = stream.ReadByte();
+
                 if (stream.Length - stream.Position >= 4)
                 {
                     int x = stream.ReadInt();
@@ -26,7 +37,25 @@ namespace Minecraft.Handlers
                             if (stream.Length - stream.Position >= 1)
                             {
                                 byte face = stream.ReadByte();
-                                //TODO
+                                //TODO: Validation
+                                //switch(status)
+                                //{
+                                //    case PlayerDiggingStatus.Started:
+                                //        break;
+                                //    case PlayerDiggingStatus.Digging:
+                                //        break;
+                                //    case PlayerDiggingStatus.Stopped:
+                                //        break;
+                                //    case PlayerDiggingStatus.Broken:
+                                //        break;
+                                //    case PlayerDiggingStatus.Dropped:
+                                //        break;
+                                //}
+
+                                if (status == 4)
+                                {
+                                }
+
                                 return true;
                             }
                         }

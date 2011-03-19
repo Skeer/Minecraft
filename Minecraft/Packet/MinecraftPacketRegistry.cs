@@ -35,6 +35,7 @@ namespace Minecraft.Packet
             Handlers.Add((byte)MinecraftOpcode.HoldingChange, new HoldingChangeHandler());
             Handlers.Add((byte)MinecraftOpcode.PlayerDigging, new PlayerDiggingHandler());
             Handlers.Add((byte)MinecraftOpcode.Animation, new AnimationHandler());
+            Handlers.Add((byte)MinecraftOpcode.PlayerBlockPlacement, new PlayerBlockPlacementHandler());
             Handlers.Add((byte)MinecraftOpcode.Player, new PlayerHandler());
             Handlers.Add((byte)MinecraftOpcode.PlayerPosition, new PlayerPositionHandler());
             Handlers.Add((byte)MinecraftOpcode.PlayerLook, new PlayerLookHandler());

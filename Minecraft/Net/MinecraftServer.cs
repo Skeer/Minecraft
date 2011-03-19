@@ -21,7 +21,7 @@ namespace Minecraft.Net
         private bool Disposed = false;
         private byte _Dimension = 0; //Maybe do this client wise?
         private int Port = 25565;
-        private int _Version = 8;
+        private int _Version = 9;
         private string _Path = @"C:\world\";
         private uint _Entity = 0;
         private AutoResetEvent ResetEvent = new AutoResetEvent(true);
@@ -31,6 +31,7 @@ namespace Minecraft.Net
         private MinecraftAuthentication _Authentication = MinecraftAuthentication.Online;
         private Socket Server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         private System.Timers.Timer TimeTimer = new System.Timers.Timer(1000);
+        private NBTFile LevelData;
 
         public static MinecraftServer Instance
         {
@@ -45,22 +46,72 @@ namespace Minecraft.Net
         /// <summary>
         /// In blocks (32 px).
         /// </summary>
-        public int SpawnX { get; set; }
+        public int SpawnX
+        {
+            get
+            {
+                return (int)LevelData["Data"]["SpawnX"].Payload;
+            }
+            set
+            {
+                LevelData["Data"]["SpawnX"].Payload = value;
+            }
+        }
         /// <summary>
         /// In blocks (32 px).
         /// </summary>
-        public short SpawnY { get; set; }
+        public short SpawnY
+        {
+            get
+            {
+                return (short)(int)LevelData["Data"]["SpawnY"].Payload;
+            }
+            set
+            {
+                LevelData["Data"]["SpawnY"].Payload = value;
+            }
+        }
         /// <summary>
         /// In blocks (32 px).
         /// </summary>
-        public int SpawnZ { get; set; }
-        public long Time { get; set; }
+        public int SpawnZ
+        {
+            get
+            {
+                return (int)LevelData["Data"]["SpawnZ"].Payload;
+            }
+            set
+            {
+                LevelData["Data"]["SpawnZ"].Payload = value;
+            }
+        }
+        public long Time
+        {
+            get
+            {
+                return (long)LevelData["Data"]["Time"].Payload;
+            }
+            set
+            {
+                LevelData["Data"]["Time"].Payload = value;
+            }
+        }
         public int Version
         {
             get { return _Version; }
             set { _Version = value; }
         }
-        public long RandomSeed { get; set; }
+        public long RandomSeed
+        {
+            get
+            {
+                return (long)LevelData["Data"]["RandomSeed"].Payload;
+            }
+            set
+            {
+                LevelData["Data"]["RandomSeed"].Payload = value;
+            }
+        }
         public string Path
         {
             get { return _Path; }
@@ -94,16 +145,7 @@ namespace Minecraft.Net
             Watcher = new FileSystemWatcher(_Path, "session.lock");
             Watcher.Changed += new FileSystemEventHandler(Watcher_Changed);
 
-            using (NBTFile file = NBTFile.Open(_Path + "level.dat"))
-            {
-                SpawnX = (int)file.FindPayload("SpawnX");
-                SpawnY = (short)(int)file.FindPayload("SpawnY"); 
-                SpawnZ = (int)file.FindPayload("SpawnZ");
-
-                Time = (long)file.FindPayload("Time");
-
-                RandomSeed = (long)file.FindPayload("RandomSeed");
-            }
+            LevelData = NBTFile.Open(_Path + "level.dat");
 
             PacketRegistry = new MinecraftPacketRegistry();
             CommandManager = new CommandManager();
@@ -119,7 +161,7 @@ namespace Minecraft.Net
 
                 Server.Bind(endPoint);
                 Server.Listen(10);
-                Log.Info("Socket server bound and listing at {0}.", endPoint);
+                Log.Info("Server bound and listing at {0}.", endPoint);
 
                 while (ResetEvent.WaitOne())
                 {
@@ -243,10 +285,7 @@ namespace Minecraft.Net
 
         public void Save()
         {
-            //chunks
-            //players
-            //  position
-            //  items
+            LevelData.Save();
         }
 
         public void Dispose()
@@ -315,7 +354,7 @@ namespace Minecraft.Net
 
         public MinecraftRank GetRank(string Username)
         {
-            if(Administrators.Contains(Username.ToLower()))
+            if (Administrators.Contains(Username.ToLower()))
             {
                 return MinecraftRank.Admin;
             }

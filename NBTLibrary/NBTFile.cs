@@ -8,8 +8,9 @@ namespace NBTLibrary
     public class NBTFile : IDisposable
     {
         private NBTStream Stream = new NBTStream();
-        public Tag File;
+        public Tag Root { get; set; }
         private bool Disposed = false;
+        private string Path;
 
         public static NBTFile Open(string path)
         {
@@ -22,6 +23,7 @@ namespace NBTLibrary
 
         private NBTFile(string path)
         {
+            Path = path;
             using (GZipStream gStream = new GZipStream(new FileStream(path, FileMode.Open), CompressionMode.Decompress))
             {
                 gStream.CopyTo(Stream);
@@ -31,16 +33,28 @@ namespace NBTLibrary
             //start
             if (Stream.ReadTag() == TagType.Compound)
             {
-                File = new Tag();
-                File.Type = TagType.Compound;
-                ParseTag(File);
+                Root = new Tag();
+                Root.Type = TagType.Compound;
+                ParseTag(Root);
+            }
+        }
+
+        public void Save()
+        {
+            try
+            {
+                Save(Path);
+            }
+            catch
+            {
+                throw new NotSupportedException();
             }
         }
 
         public void Save(string path)
         {
             Stream.SetLength(0);
-            SaveTag(File);
+            SaveTag(Root);
             Stream.Position = 0;
             using (GZipStream gStream = new GZipStream(new FileStream(path, FileMode.Create), CompressionMode.Compress))
             {
@@ -89,8 +103,8 @@ namespace NBTLibrary
                         Stream.WriteInt((int)tag.Payload);
                         break;
                     case TagType.List:
-                        Tag[] load = (Tag[])tag.Payload;
-                        if (load.Length > 0)
+                        List<Tag> load = (List<Tag>)tag.Payload;
+                        if (load.Count > 0)
                         {
                             Stream.WriteTag(load[0].Type);
                         }
@@ -99,7 +113,7 @@ namespace NBTLibrary
                             // Dummy tag lol
                             Stream.WriteTag(TagType.Byte);
                         }
-                        Stream.WriteInt(load.Length);
+                        Stream.WriteInt(load.Count);
                         foreach (Tag t in load)
                         {
                             SaveTag(t, true);
@@ -115,6 +129,18 @@ namespace NBTLibrary
                         Stream.WriteString((string)tag.Payload);
                         break;
                 }
+            }
+        }
+
+        public Tag this[string index]
+        {
+            get
+            {
+                return Root[index];
+            }
+            set
+            {
+                Root[index] = value;
             }
         }
 
@@ -171,12 +197,13 @@ namespace NBTLibrary
                     case TagType.List:
                         TagType type = Stream.ReadTag();
                         length = Stream.ReadInt();
-                        Tag[] load = new Tag[length];
+                        List<Tag> load = new List<Tag>();
                         for (int i = 0; i < length; ++i)
                         {
-                            load[i] = new Tag();
-                            load[i].Type = type;
-                            ParseTag(load[i], true);
+                            Tag t = new Tag();
+                            t.Type = type;
+                            ParseTag(t, true);
+                            load.Add(t);
                         }
                         tag.Payload = load;
                         break;
@@ -219,7 +246,7 @@ namespace NBTLibrary
         {
             if (tag == null)
             {
-                tag = File;
+                tag = Root;
             }
 
             if (!IsList && tag.Name == name)
@@ -241,7 +268,7 @@ namespace NBTLibrary
             }
             else if (tag.Type == TagType.List)
             {
-                foreach (Tag t in (Tag[])tag.Payload)
+                foreach (Tag t in (List<Tag>)tag.Payload)
                 {
                     object p = FindPayload(name, t, true);
 
@@ -258,6 +285,33 @@ namespace NBTLibrary
         ~NBTFile()
         {
             Dispose(false);
+        }
+
+        public static NBTFile Load(byte[] data)
+        {
+            NBTFile file = new NBTFile(data);
+            return file;
+        }
+
+        private NBTFile(byte[] data)
+        {
+            Stream.Write(data, 0, data.Length);
+            Stream.Position = 0;
+
+            //start
+            if (Stream.ReadTag() == TagType.Compound)
+            {
+                Root = new Tag();
+                Root.Type = TagType.Compound;
+                ParseTag(Root);
+            }
+        }
+
+        public byte[] GetBytes()
+        {
+            Stream.SetLength(0);
+            SaveTag(Root);
+            return Stream.ToArray();
         }
     }
 }

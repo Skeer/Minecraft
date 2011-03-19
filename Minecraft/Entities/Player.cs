@@ -14,13 +14,54 @@ namespace Minecraft.Entities
     {
         private List<Chunk> LoadedChunks = new List<Chunk>();
         private List<Player> LoadedPlayers = new List<Player>();
+        private NBTFile Data;
 
-        public bool OnGround { get; set; }
+        public bool OnGround
+        {
+            get
+            {
+                return  (byte)Data["OnGround"].Payload == 0x01;
+            }
+            set
+            {
+                Data["OnGround"].Payload = value ? (byte)0x01 : (byte)0x00;
+            }
+        }
         public short HoldingSlot { get; set; }
         public double Stance { get; set; }
-        public double MotionX { get; set; }
-        public double MotionY { get; set; }
-        public double MotionZ { get; set; }
+        public double MotionX
+        {
+            get
+            {
+                return (double)((List<Tag>)Data["Motion"].Payload)[0].Payload;
+            }
+            set
+            {
+                ((List<Tag>)Data["Motion"].Payload)[0].Payload = value;
+            }
+        }
+        public double MotionY
+        {
+            get
+            {
+                return (double)((List<Tag>)Data["Motion"].Payload)[1].Payload;
+            }
+            set
+            {
+                ((List<Tag>)Data["Motion"].Payload)[1].Payload = value;
+            }
+        }
+        public double MotionZ
+        {
+            get
+            {
+                return (double)((List<Tag>)Data["Motion"].Payload)[2].Payload;
+            }
+            set
+            {
+                ((List<Tag>)Data["Motion"].Payload)[2].Payload = value;
+            }
+        }
         public float FallDistance { get; set; }
         public int Dimension { get; set; } // Currently not needed, but if I want nether, this is needed.
         public short Air { get; set; }
@@ -48,6 +89,7 @@ namespace Minecraft.Entities
 
             if (!Load())
             {
+                // Load new configuration structure...
                 OnGround = true;
                 FallDistance = 0;
                 Dimension = 0;
@@ -69,50 +111,43 @@ namespace Minecraft.Entities
         {
             try
             {
-                using (NBTFile file = NBTFile.Open(Path.Combine(MinecraftServer.Instance.Path, "players", Username + ".dat")))
+                Data = NBTFile.Open(Path.Combine(MinecraftServer.Instance.Path, "players", Username + ".dat"));
+
+                HurtTime = (short)Data.FindPayload("HurtTime");
+
+                Health = (short)Data.FindPayload("Health");
+
+                Dimension = (int)Data.FindPayload("Dimension");
+
+                Air = (short)Data.FindPayload("Air");
+
+                List<Tag> inventory = (List<Tag>)Data.FindPayload("Inventory");
+                foreach (Tag tag in inventory)
                 {
-                    Tag[] motion = (Tag[])file.FindPayload("Motion");
-                    MotionX = (double)motion[0].Payload;
-                    MotionY = (double)motion[1].Payload;
-                    MotionZ = (double)motion[2].Payload;
-
-                    OnGround = BitConverter.ToBoolean(new byte[] { (byte)file.FindPayload("OnGround") }, 0);
-
-                    HurtTime = (short)file.FindPayload("HurtTime");
-
-                    Health = (short)file.FindPayload("Health");
-
-                    Dimension = (int)file.FindPayload("Dimension");
-
-                    Air = (short)file.FindPayload("Air");
-
-                    Tag[] inventory = (Tag[])file.FindPayload("Inventory");
-                    foreach (Tag tag in inventory)
-                    {
-                        Item i = new Item();
-                        i.ID = (short)file.FindPayload("id", tag);
-                        i.Damage = (short)file.FindPayload("Damage", tag);
-                        i.Count = (byte)file.FindPayload("Count", tag);
-                        i.Slot = (byte)file.FindPayload("Slot", tag);
-                        Inventory.Add(i.Slot, i);
-                    }
-
-                    Tag[] pos = (Tag[])file.FindPayload("Pos");
-                    X = (double)pos[0].Payload;
-                    Y = (double)pos[1].Payload + 3;
-                    Z = (double)pos[2].Payload;
-
-                    AttackTime = (short)file.FindPayload("AttackTime");
-
-                    Fire = (short)file.FindPayload("Fire");
-
-                    FallDistance = (float)file.FindPayload("FallDistance");
-
-                    Tag[] rotation = (Tag[])file.FindPayload("Rotation");
-                    Rotation = new Rotation() { Yaw = (float)rotation[0].Payload, Pitch = (float)rotation[1].Payload };
-
-                    DeathTime = (short)file.FindPayload("DeathTime");
+                    Item i = new Item();
+                    i.ID = (short)Data.FindPayload("id", tag);
+                    i.Damage = (short)Data.FindPayload("Damage", tag);
+                    i.Count = (byte)Data.FindPayload("Count", tag);
+                    i.Slot = (byte)Data.FindPayload("Slot", tag);
+                    Inventory.Add(i.Slot, i);
                 }
+
+                List<Tag> pos = (List<Tag>)Data.FindPayload("Pos");
+                X = (double)pos[0].Payload;
+                Y = (double)pos[1].Payload + 3;
+                Z = (double)pos[2].Payload;
+
+                AttackTime = (short)Data.FindPayload("AttackTime");
+
+                Fire = (short)Data.FindPayload("Fire");
+
+                FallDistance = (float)Data.FindPayload("FallDistance");
+
+                List<Tag> rotation = (List<Tag>)Data.FindPayload("Rotation");
+                Rotation = new Rotation() { Yaw = (float)rotation[0].Payload, Pitch = (float)rotation[1].Payload };
+
+                DeathTime = (short)Data.FindPayload("DeathTime");
+
                 return true;
             }
             catch
@@ -145,11 +180,13 @@ namespace Minecraft.Entities
 
         public void Save()
         {
+            Data.Save();
+            return;
             //TODO: There has to be a better way to do this...
             using (NBTFile file = new NBTFile())
             {
-                file.File = new Tag();
-                file.File.Type = TagType.Compound;
+                file.Root = new Tag();
+                file.Root.Type = TagType.Compound;
 
                 List<Tag> payload = new List<Tag>();
 
@@ -157,22 +194,22 @@ namespace Minecraft.Entities
                 motion.Type = TagType.List;
                 motion.Name = "Motion";
 
-                Tag[] motionPayload = new Tag[3];
+                List<Tag> motionPayload = new List<Tag>();
 
                 Tag motionx = new Tag();
                 motionx.Type = TagType.Double;
                 motionx.Payload = MotionX;
-                motionPayload[0] = motionx;
+                motionPayload.Add(motionx);
 
                 Tag motiony = new Tag();
                 motiony.Type = TagType.Double;
                 motiony.Payload = MotionY;
-                motionPayload[1] = motiony;
+                motionPayload.Add(motiony);
 
                 Tag motionz = new Tag();
                 motionz.Type = TagType.Double;
                 motionz.Payload = MotionZ;
-                motionPayload[2] = motionz;
+                motionPayload.Add(motionz);
 
                 motion.Payload = motionPayload;
 
@@ -181,7 +218,7 @@ namespace Minecraft.Entities
                 Tag onGround = new Tag();
                 onGround.Type = TagType.Byte;
                 onGround.Name = "OnGround";
-                onGround.Payload = BitConverter.GetBytes(OnGround)[0];
+                onGround.Payload = OnGround ? 0x01 : 0x00;
 
                 payload.Add(onGround);
 
@@ -217,9 +254,8 @@ namespace Minecraft.Entities
                 inventory.Type = TagType.List;
                 inventory.Name = "Inventory";
 
-                Tag[] inventoryPayload = new Tag[Inventory.Count];
+                List<Tag> inventoryPayload = new List<Tag>();
 
-                int index = 0;
                 foreach (Item i in Inventory.Values)
                 {
                     Tag item = new Tag();
@@ -257,7 +293,7 @@ namespace Minecraft.Entities
 
                     item.Payload = itemPayload;
 
-                    inventoryPayload[index++] = item;
+                    inventoryPayload.Add(item);
                 }
 
                 inventory.Payload = inventoryPayload;
@@ -268,22 +304,22 @@ namespace Minecraft.Entities
                 pos.Type = TagType.List;
                 pos.Name = "Pos";
 
-                Tag[] posPayload = new Tag[3];
+                List<Tag> posPayload = new List<Tag>();
 
                 Tag posx = new Tag();
                 posx.Type = TagType.Double;
                 posx.Payload = X;
-                posPayload[0] = posx;
+                posPayload.Add(posx);
 
                 Tag posy = new Tag();
                 posy.Type = TagType.Double;
                 posy.Payload = Y;
-                posPayload[1] = posy;
+                posPayload.Add(posy);
 
                 Tag posz = new Tag();
                 posz.Type = TagType.Double;
                 posz.Payload = Z;
-                posPayload[2] = posz;
+                posPayload.Add(posz);
 
                 pos.Payload = posPayload;
 
@@ -314,17 +350,17 @@ namespace Minecraft.Entities
                 rotation.Type = TagType.List;
                 rotation.Name = "Rotation";
 
-                Tag[] rotationPayload = new Tag[2];
+                List<Tag> rotationPayload = new List<Tag>();
 
                 Tag yaw = new Tag();
                 yaw.Type = TagType.Float;
                 yaw.Payload = Rotation.Yaw;
-                rotationPayload[0] = yaw;
+                rotationPayload.Add(yaw);
 
                 Tag pitch = new Tag();
                 pitch.Type = TagType.Float;
                 pitch.Payload = Rotation.Pitch;
-                rotationPayload[1] = pitch;
+                rotationPayload.Add(pitch);
 
                 rotation.Payload = rotationPayload;
 
@@ -337,7 +373,7 @@ namespace Minecraft.Entities
 
                 payload.Add(deathTime);
 
-                file.File.Payload = payload;
+                file.Root.Payload = payload;
 
                 file.Save(Path.Combine(MinecraftServer.Instance.Path, "players", Username + ".dat"));
             }

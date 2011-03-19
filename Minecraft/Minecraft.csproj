@@ -46,6 +46,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="administrators.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Commands\List.cs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -64,6 +67,7 @@
     <Compile Include="Handlers\AnimationHandler.cs" />
     <Compile Include="Handlers\ChatMessageHandler.cs" />
     <Compile Include="Handlers\HoldingChangeHandler.cs" />
+    <Compile Include="Handlers\PlayerBlockPlacementHandler.cs" />
     <Compile Include="Handlers\PlayerDiggingHandler.cs" />
     <Compile Include="Handlers\PlayerLookHandler.cs" />
     <Compile Include="Handlers\PlayerHandler.cs" />
@@ -87,6 +91,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\Base36.cs" />
     <Compile Include="Utilities\Logger.cs" />
+    <Compile Include="Map\RegionFile.cs" />
+    <Content Include="zlib.net.dll" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -99,9 +105,6 @@
       <Project>{CCD4044B-0034-4670-BCB9-22EA11A716F8}</Project>
       <Name>NBTLibrary</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="zlib.net.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

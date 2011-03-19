@@ -2,17 +2,45 @@
 using System.Collections.Generic;
 using Minecraft.Entities;
 using NBTLibrary;
+using Minecraft.Utilities;
 
 namespace Minecraft.Map
 {
     public class Chunk
     {
-        public byte TerrainPopulated { get; set; }
-        public byte[] BlockLight { get; set; }
-        public byte[] Blocks { get; set; }
-        public byte[] Data { get; set; }
-        public byte[] HeightMap { get; set; }
-        public byte[] SkyLight { get; set; }
+        private Logger Log = new Logger(typeof(Chunk));
+        private NBTFile Config;
+
+        public byte TerrainPopulated
+        {
+            get { return (byte)Config["Level"]["TerrainPopulated"].Payload; }
+            set { Config["Level"]["TerrainPopulated"].Payload = value; }
+        }
+        public byte[] BlockLight
+        {
+            get { return (byte[])Config["Level"]["BlockLight"].Payload; }
+            set { Config["Level"]["BlockLight"].Payload = value; }
+        }
+        public byte[] Blocks
+        {
+            get { return (byte[])Config["Level"]["Blocks"].Payload; }
+            set { Config["Level"]["Blocks"].Payload = value; }
+        }
+        public byte[] Data
+        {
+            get { return (byte[])Config["Level"]["Data"].Payload; }
+            set { Config["Level"]["Data"].Payload = value; }
+        }
+        public byte[] HeightMap
+        {
+            get { return (byte[])Config["Level"]["HeightMap"].Payload; }
+            set { Config["Level"]["HeightMap"].Payload = value; }
+        }
+        public byte[] SkyLight
+        {
+            get { return (byte[])Config["Level"]["SkyLight"].Payload; }
+            set { Config["Level"]["SkyLight"].Payload = value; }
+        }
         /// <summary>
         /// In chunks (16 blocks).
         /// </summary>
@@ -22,54 +50,33 @@ namespace Minecraft.Map
         /// </summary>
         public int Z { get; set; }
         public long LastUpdate { get; set; }
-        public string Path { get; set; }
         public List<Entity> Entities = new List<Entity>();
         public List<Entity> TileEntities = new List<Entity>();
+        private RegionFile Region;
 
-        public Chunk(string path)
+        public Chunk(RegionFile region, int x, int z, byte[] data)
         {
-            Path = path;
-
-            Reload();
+            X = x;
+            Z = z;
+            Region = region;
+            Load(data);
         }
 
-        private void Reload()
+        public void Load(byte[] data)
         {
-            Entities.Clear();
-            TileEntities.Clear();
-            using (NBTFile file = NBTFile.Open(Path))
+            try
             {
-                Data = (byte[])file.FindPayload("Data");
-
-                Tag[] entities = (Tag[])file.FindPayload("Entities");
-                foreach (Tag t in entities)
-                {
-                    //TODO: Parse Entities
-                    Entities.Add(new Entity());
-                }
-
-                LastUpdate = (long)file.FindPayload("LastUpdate");
-                X = (int)file.FindPayload("xPos");
-                Z = (int)file.FindPayload("zPos");
-
-                Tag[] tileEntities = (Tag[])file.FindPayload("TileEntities");
-                foreach (Tag t in tileEntities)
-                {
-                    //TODO: Parse more entities
-                    TileEntities.Add(new Entity());
-                }
-
-                TerrainPopulated = (byte)file.FindPayload("TerrainPopulated");
-                SkyLight = (byte[])file.FindPayload("SkyLight");
-                HeightMap = (byte[])file.FindPayload("HeightMap");
-                BlockLight = (byte[])file.FindPayload("BlockLight");
-                Blocks = (byte[])file.FindPayload("Blocks");
+                Config = NBTFile.Load(data);
+            }
+            catch
+            {
+                Log.Warning("Unable to load Chunk. Possibly need of generation.");
             }
         }
 
         public void Save()
         {
-            throw new NotImplementedException();
+            Region.SetChunkData(X, Z, Config.GetBytes(), DateTime.Now.Ticks);
         }
 
         public override string ToString()

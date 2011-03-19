@@ -118,7 +118,7 @@ namespace Minecraft.Command
             try
             {
                 ICommand command = ((ICommand)domain.CreateInstanceFromAndUnwrap(Path.Combine(CommandDirectory, Commands[name] + ".dll"), "Minecraft.Commands." + Commands[name]));
-                if (command.Rank.CompareTo(client.Player.Rank) >= 0)
+                if (command.Rank.CompareTo(client.Player.Rank) <= 0)
                 {
                     command.Run(MinecraftServer.Instance, client, args);
                 }
