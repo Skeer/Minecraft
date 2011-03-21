@@ -40,7 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Tag.cs" />
+    <Compile Include="Tags\Tag.cs" />
     <Compile Include="NBTFile.cs" />
     <Compile Include="NBTStream.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

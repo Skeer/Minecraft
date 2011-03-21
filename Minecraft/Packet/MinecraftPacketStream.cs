@@ -65,10 +65,7 @@ namespace Minecraft.Packet
 
         public bool ReadBool()
         {
-            byte[] buffer = new byte[1];
-            Read(buffer, 0, buffer.Length);
-            ReverseBytes(buffer);
-            return BitConverter.ToBoolean(buffer, 0);
+            return ReadByte() != 0;
         }
 
         public string ReadString(short length)
@@ -115,9 +112,7 @@ namespace Minecraft.Packet
 
         public void WriteBool(bool b)
         {
-            byte[] buffer = BitConverter.GetBytes(b);
-            ReverseBytes(buffer); // LOL
-            Write(buffer, 0, buffer.Length);
+            WriteByte((byte)(b ? 1 : 0));
         }
 
         public void WriteDouble(double d)

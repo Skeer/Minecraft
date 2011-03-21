@@ -2,6 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using System;
+using NBTLibrary.Tags;
 
 namespace NBTLibrary
 {

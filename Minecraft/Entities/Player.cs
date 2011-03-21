@@ -7,6 +7,7 @@ using Minecraft.Net;
 using NBTLibrary;
 using Minecraft.Packet;
 using Minecraft.Command;
+using NBTLibrary.Tags;
 
 namespace Minecraft.Entities
 {
@@ -79,32 +80,31 @@ namespace Minecraft.Entities
             set { Data["HurtTime"].Payload = value; }
         }
         public string Username { get; set; }
-        public uint EID { get; set; }
         public Chunk CurrentChunk { get; set; }
         public Dictionary<byte, Item> Inventory = new Dictionary<byte, Item>();
         public MinecraftClient Client { get; set; }
         public MinecraftRank Rank { get; set; }
-        public float Yaw
+        public override float Yaw
         {
             get { return (float)((List<Tag>)Data["Rotation"].Payload)[0].Payload; }
             set { ((List<Tag>)Data["Rotation"].Payload)[0].Payload = value; }
         }
-        public float Pitch
+        public override float Pitch
         {
             get { return (float)((List<Tag>)Data["Rotation"].Payload)[1].Payload; }
             set { ((List<Tag>)Data["Rotation"].Payload)[1].Payload = value; }
         }
-        public new double X
+        public override double X
         {
             get { return (double)((List<Tag>)Data["Pos"].Payload)[0].Payload; }
             set { ((List<Tag>)Data["Pos"].Payload)[0].Payload = value; }
         }
-        public new double Y
+        public override double Y
         {
             get { return (double)((List<Tag>)Data["Pos"].Payload)[1].Payload; }
             set { ((List<Tag>)Data["Pos"].Payload)[1].Payload = value; }
         }
-        public new double Z
+        public override double Z
         {
             get { return (double)((List<Tag>)Data["Pos"].Payload)[2].Payload; }
             set { ((List<Tag>)Data["Pos"].Payload)[2].Payload = value; }
@@ -389,7 +389,7 @@ namespace Minecraft.Entities
         /// </summary>
         public void Update()
         {
-            Chunk currentChunk = MinecraftServer.Instance.ChunkManager.GetChunk((int)X / 16, (int)Z / 16);
+            Chunk currentChunk = MinecraftServer.Instance.ChunkManager.GetChunkFromBlockCoords((int)X, (int)Z);
             if (CurrentChunk == null || currentChunk != CurrentChunk)
             {
                 List<Chunk> chunks = MinecraftServer.Instance.ChunkManager.GetChunks((int)X / 16, (int)Z / 16);

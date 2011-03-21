@@ -14,11 +14,10 @@ using NBTLibrary;
 
 namespace Minecraft.Net
 {
-    public class MinecraftServer : MarshalByRefObject, IDisposable
+    public class MinecraftServer : MarshalByRefObject
     {
         private static Logger Log = new Logger(typeof(MinecraftServer));
         private static MinecraftServer _Instance = new MinecraftServer();
-        private bool Disposed = false;
         private byte _Dimension = 0; //Maybe do this client wise?
         private int Port = 25565;
         private int _Version = 9;
@@ -125,6 +124,7 @@ namespace Minecraft.Net
         public ChunkManager ChunkManager { get; set; }
         public CommandManager CommandManager { get; set; }
         public Dictionary<string, Player> Players = new Dictionary<string, Player>();
+        public Dictionary<uint, Entity> Entities = new Dictionary<uint, Entity>();
         public MinecraftAuthentication Authentication
         {
             get { return _Authentication; }
@@ -280,64 +280,11 @@ namespace Minecraft.Net
         public void Shutdown()
         {
             Save();
-            Dispose();
         }
 
         public void Save()
         {
             LevelData.Save();
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!Disposed)
-            {
-                if (disposing)
-                {
-                    if (Logger.Writer != null)
-                    {
-                        Logger.Writer.Dispose();
-                    }
-
-                    if (Server != null)
-                    {
-                        Server.Dispose();
-                    }
-
-                    if (ResetEvent != null)
-                    {
-                        ResetEvent.Dispose();
-                    }
-
-                    if (Watcher != null)
-                    {
-                        Watcher.Dispose();
-                    }
-
-                    if (CommandManager != null)
-                    {
-                        CommandManager.Dispose();
-                    }
-                }
-
-                CommandManager = null;
-                Watcher = null;
-                ResetEvent = null;
-                Server = null;
-                Logger.Writer = null;
-                Disposed = true;
-            }
-        }
-
-        ~MinecraftServer()
-        {
-            Dispose(false);
         }
 
         private void OnAccept(IAsyncResult result)

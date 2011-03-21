@@ -7,31 +7,19 @@ namespace Minecraft.Handlers
     {
         public bool HandlePacket(MinecraftClient client, MinecraftPacketStream stream)
         {
-            if (stream.Length - stream.Position >= 8)
+            if (stream.Length - stream.Position >= 33)
             {
                 double x = stream.ReadDouble();
-                if (stream.Length - stream.Position >= 8)
-                {
-                    double y = stream.ReadDouble();
-                    if (stream.Length - stream.Position >= 8)
-                    {
-                        double stance = stream.ReadDouble();
-                        if (stream.Length - stream.Position >= 8)
-                        {
-                            double z = stream.ReadDouble();
-                            if (stream.Length - stream.Position >= 1)
-                            {
-                                client.Player.X = x;
-                                client.Player.Y = y;
-                                client.Player.Stance = stance;
-                                client.Player.Z = z;
-                                client.Player.OnGround = stream.ReadBool();
-                                client.Player.Update();
-                                return true;
-                            }
-                        }
-                    }
-                }
+                double y = stream.ReadDouble();
+                double stance = stream.ReadDouble();
+                double z = stream.ReadDouble();
+                client.Player.X = x;
+                client.Player.Y = y;
+                client.Player.Stance = stance;
+                client.Player.Z = z;
+                client.Player.OnGround = stream.ReadBool();
+                client.Player.Update();
+                return true;
             }
             return false;
         }

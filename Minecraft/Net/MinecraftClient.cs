@@ -79,7 +79,7 @@ namespace Minecraft.Net
                     {
                         Log.Warning("Unable to process packet with id {0}.", id);
                         Disconnect("Server failed to process packet.");
-                        Dispose();
+                        Disconnected();
                     }
                     else
                     {
@@ -122,15 +122,9 @@ namespace Minecraft.Net
                 }
 
             }
-            catch (NullReferenceException)
-            {
-                Disconnected();
-            }
             catch
             {
-                Log.Warning("Client disconnected from {0}.", EndPoint);
-                Player.Save();
-                Dispose();
+                Disconnected();
             }
         }
 
@@ -202,6 +196,11 @@ namespace Minecraft.Net
                         MinecraftServer.Instance.Players.Remove(Username.ToLower());
                     }
 
+                    if(MinecraftServer.Instance.Entities.ContainsKey(EID))
+                    {
+                        MinecraftServer.Instance.Entities.Remove(EID);
+                    }
+
                     //Remove client for Server's client list?
                 }
 
@@ -229,6 +228,7 @@ namespace Minecraft.Net
             Player = new Player(this, Username, EID);
 
             MinecraftServer.Instance.Players.Add(Username.ToLower(), Player);
+            MinecraftServer.Instance.Entities.Add(EID, Player);
 
             //SEND Beginning Chunks
             //NOTE: Dunno if this is correct.
@@ -238,6 +238,7 @@ namespace Minecraft.Net
             foreach (Item i in Player.Inventory.Values)
             {
                 Client.Send(MinecraftPacketCreator.GetSetSlot(0, i.Slot, i.ID, i.Count, i.Uses));
+                
             }
 
             Client.Send(MinecraftPacketCreator.GetSpawnPosition(MinecraftServer.Instance.SpawnX, MinecraftServer.Instance.SpawnY, MinecraftServer.Instance.SpawnZ));
@@ -246,7 +247,5 @@ namespace Minecraft.Net
 
             Client.Send(MinecraftPacketCreator.GetTimeUpdate(MinecraftServer.Instance.Time));
         }
-
-        private bool SuppressMessage = false;
     }
 }

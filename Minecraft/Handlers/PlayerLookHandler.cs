@@ -7,20 +7,14 @@ namespace Minecraft.Handlers
     {
         public bool HandlePacket(MinecraftClient client, MinecraftPacketStream stream)
         {
-            if (stream.Length - stream.Position >= 4)
+            if (stream.Length - stream.Position >= 9)
             {
                 float yaw = stream.ReadFloat();
-                if (stream.Length - stream.Position >= 4)
-                {
-                    float pitch = stream.ReadFloat();
-                    if (stream.Length - stream.Position >= 1)
-                    {
-                        client.Player.Yaw = yaw;
-                        client.Player.Pitch = pitch;
-                        client.Player.OnGround = stream.ReadBool();
-                        return true;
-                    }
-                }
+                float pitch = stream.ReadFloat();
+                client.Player.Yaw = yaw;
+                client.Player.Pitch = pitch;
+                client.Player.OnGround = stream.ReadBool();
+                return true;
             }
             return false;
         }

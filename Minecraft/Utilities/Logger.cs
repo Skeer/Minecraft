@@ -22,6 +22,20 @@ namespace Minecraft.Utilities
 
         public void Info(string message, params object[] args)
         {
+            // I'd do it like this instead:
+
+            string msgheader = string.Format("{0}, [INFO] ", DateTime.Now);
+            if (Display)
+            {
+                Console.Write(msgheader);
+                Console.WriteLine(message, args);
+            }
+            Writer.Write(msgheader);
+            Writer.WriteLine(message, args);
+            Writer.Flush();
+
+            //
+            /*
             if (_Display)
             {
                 Console.Write("{0} [INFO] ", DateTime.Now);
@@ -45,6 +59,7 @@ namespace Minecraft.Utilities
                 Writer.WriteLine(message);
             }
             Writer.Flush();
+             * */
         }
 
         public void Warning(string message, params object[] args)
@@ -81,20 +96,20 @@ namespace Minecraft.Utilities
             if (Display)
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Error.Write("{0} [WARNING] ", DateTime.Now);
+                Console.Error.Write("{0} [WARNING] ", DateTime.Now);  //warning here, error below?
                 if (args.Length > 0)
                 {
-                    Console.Error.WriteLine(message, args);
+                    Console.WriteLine(message, args);
                 }
                 else
                 {
-                    Console.Error.WriteLine(message);
+                    Console.WriteLine(message);
                 }
                 Console.ResetColor();
-                Console.Error.WriteLine(e);
+                Console.WriteLine(e);
             }
 
-            Writer.Write("{0} [ERROR] ", DateTime.Now);
+            Writer.Write("{0} [WARNING] ", DateTime.Now); // error?  above is warning?
             if (args.Length > 0)
             {
                 Writer.WriteLine(message, args);

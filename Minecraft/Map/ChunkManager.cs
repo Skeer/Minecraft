@@ -11,23 +11,6 @@ namespace Minecraft.Map
         private Dictionary<int, Dictionary<int, Chunk>> Chunks = new Dictionary<int, Dictionary<int, Chunk>>();
         private Dictionary<int, Dictionary<int, RegionFile>> Regions = new Dictionary<int, Dictionary<int, RegionFile>>();
 
-        public string GetChunkPath(int x, int z)
-        {
-            // TODO: Check path seperators? ROFL
-
-            StringBuilder builder = new StringBuilder();
-            builder.Append(MinecraftServer.Instance.Path);
-            builder.Append(Base36.Parse(x & 63));
-            builder.Append("/");
-            builder.Append(Base36.Parse(z & 63));
-            builder.Append("/c.");
-            builder.Append(Base36.Parse(x));
-            builder.Append(".");
-            builder.Append(Base36.Parse(z));
-            builder.Append(".dat");
-            return builder.ToString();
-        }
-
         /// <summary>
         /// Get chunks within range.
         /// </summary>
@@ -50,6 +33,11 @@ namespace Minecraft.Map
                 }
             }
             return chunks;
+        }
+
+        public Chunk GetChunkFromBlockCoords(int x, int z)
+        {
+            return GetChunk((x - 1) / 16, (z - 1) / 16);
         }
 
         /// <summary>
@@ -78,7 +66,7 @@ namespace Minecraft.Map
                         Regions.Add(rx, new Dictionary<int, RegionFile>());
                         Regions[rx].Add(rz, new RegionFile(rx, rz));
                     }
-                    Chunks[x].Add(z, new Chunk(Regions[rx][rz], x, z, data: Regions[rx][rz].GetChunkData(x, z)));
+                    Chunks[x].Add(z, new Chunk(Regions[rx][rz], Regions[rx][rz].GetChunkData(x, z)));
                 }
             }
             else
@@ -98,7 +86,7 @@ namespace Minecraft.Map
                     Regions.Add(rx, new Dictionary<int, RegionFile>());
                     Regions[rx].Add(rz, new RegionFile(rx, rz));
                 }
-                Chunks[x].Add(z, new Chunk(Regions[rx][rz], x, z, data: Regions[rx][rz].GetChunkData(x, z)));
+                Chunks[x].Add(z, new Chunk(Regions[rx][rz], Regions[rx][rz].GetChunkData(x, z)));
             }
             return Chunks[x][z];
         }

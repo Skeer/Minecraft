@@ -30,7 +30,6 @@ namespace Minecraft.Utilities
                 builder.Insert(1, Key[i % 36]);
                 i /= 36;
             }
-
             return builder.ToString().Trim();
         }
     }

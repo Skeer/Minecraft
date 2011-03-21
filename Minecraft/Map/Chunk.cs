@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Minecraft.Entities;
 using NBTLibrary;
 using Minecraft.Utilities;
+using NBTLibrary.Tags;
 
 namespace Minecraft.Map
 {
@@ -44,22 +45,35 @@ namespace Minecraft.Map
         /// <summary>
         /// In chunks (16 blocks).
         /// </summary>
-        public int X { get; set; }
+        public int X
+        {
+            get { return (int)Config["Level"]["xPos"].Payload; }
+            set { Config["Level"]["xPos"].Payload = value; } 
+        }
+
         /// <summary>
         /// In chunks (16 blocks).
         /// </summary>
-        public int Z { get; set; }
+        public int Z
+        {
+            get { return (int)Config["Level"]["zPos"].Payload; }
+            set { Config["Level"]["zPos"].Payload = value; }
+        }
         public long LastUpdate { get; set; }
         public List<Entity> Entities = new List<Entity>();
         public List<Entity> TileEntities = new List<Entity>();
         private RegionFile Region;
 
-        public Chunk(RegionFile region, int x, int z, byte[] data)
+        public Chunk(RegionFile region, byte[] data)
         {
-            X = x;
-            Z = z;
             Region = region;
             Load(data);
+
+            List<Tag> entities = (List<Tag>)Config["Level"]["Entities"].Payload;
+            foreach (Tag t in entities)
+            {
+                Mob.Load(t);
+            }
         }
 
         public void Load(byte[] data)
@@ -82,6 +96,32 @@ namespace Minecraft.Map
         public override string ToString()
         {
             return "(" + X + ", " + Z + ")";
+        }
+
+        public byte GetBlockAt(int x, int y, int z)
+        {
+            return Blocks[GetIndexFromCoords(x, y, z)]; 
+        }
+
+        public void SetBlockAt(int x, int y, int z, byte block)
+        {
+            Blocks[GetIndexFromCoords(x, y, z)] = block;
+        }
+
+        private int GetIndexFromCoords(int x, int y, int z)
+        {
+            int ix = x % 16;
+            if (ix < 0)
+            {
+                ix += 16;
+            }
+
+            int iz = z % 16;
+            if (iz < 0)
+            {
+                iz += 16;
+            }
+            return y + iz * 128 + ix * 2048;
         }
     }
 }

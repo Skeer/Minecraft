@@ -1,9 +1,10 @@
 ﻿using System.IO;
 using System.Text;
-using Minecraft.Entities;
 using Minecraft.Map;
 using Minecraft.Net;
 using zlib;
+using Minecraft.Items;
+using System.Collections.Generic;
 
 namespace Minecraft.Packet
 {
@@ -152,13 +153,22 @@ namespace Minecraft.Packet
             }
         }
 
+        private static short ConvertSlot(short slot)
+        {
+            if (slot < 9)
+            {
+                return (short)(slot + 36);
+            }
+            return slot;
+        }
+
         public static byte[] GetSetSlot(byte window, short slot, short id, byte count, short uses)
         {
             using (MinecraftPacketStream stream = new MinecraftPacketStream())
             {
                 stream.WriteByte((byte)MinecraftOpcode.SetSlot);
                 stream.WriteByte(window);
-                stream.WriteShort(slot);
+                stream.WriteShort(ConvertSlot(slot));
                 stream.WriteShort(id);
                 stream.WriteByte(count);
                 stream.WriteShort(uses);
@@ -192,6 +202,68 @@ namespace Minecraft.Packet
                 stream.WriteByte(yaw);
                 stream.WriteByte(pitch);
                 stream.WriteShort(currentItem);
+                return stream.ToArray();
+            }
+        }
+
+        public static byte[] GetPlayerDigging(PlayerDiggingStatus status, int x, byte y, int z, byte face)
+        {
+            using (MinecraftPacketStream stream = new MinecraftPacketStream())
+            {
+                stream.WriteByte((byte)MinecraftOpcode.PlayerDigging);
+                stream.WriteByte((byte)status);
+                stream.WriteInt(x);
+                stream.WriteByte(y);
+                stream.WriteInt(z);
+                stream.WriteByte(face);
+                return stream.ToArray();
+            }
+        }
+
+        public static byte[] GetBlockChange(int x, byte y, int z, byte type, byte metaData)
+        {
+            using (MinecraftPacketStream stream = new MinecraftPacketStream())
+            {
+                stream.WriteByte((byte)MinecraftOpcode.BlockChange);
+                stream.WriteInt(x);
+                stream.WriteByte(y);
+                stream.WriteInt(z);
+                stream.WriteByte(type);
+                stream.WriteByte(metaData);
+                return stream.ToArray();
+            }
+        }
+
+        public static byte[] GetWindowItems(byte windowID, short count, List<Item> Inventory)
+        {
+            return null;
+        }
+
+        public static byte[] GetPickupSpawn(uint eid, short id, byte count, short metaData, int x, int y, int z, byte yaw, byte pitch, byte roll)
+        {
+            using (MinecraftPacketStream stream = new MinecraftPacketStream())
+            {
+                stream.WriteByte((byte)MinecraftOpcode.PickupSpawn);
+                stream.WriteUint(eid);
+                stream.WriteShort(id);
+                stream.WriteByte(count);
+                stream.WriteShort(metaData);
+                stream.WriteInt(x);
+                stream.WriteInt(y);
+                stream.WriteInt(z);
+                stream.WriteByte(yaw);
+                stream.WriteByte(pitch);
+                stream.WriteByte(roll);
+                return stream.ToArray();
+            }
+        }
+
+        public static byte[] GetEntity(uint eid)
+        {
+            using (MinecraftPacketStream stream = new MinecraftPacketStream())
+            {
+                stream.WriteByte((byte)MinecraftOpcode.Entity);
+                stream.WriteUint(eid);
                 return stream.ToArray();
             }
         }

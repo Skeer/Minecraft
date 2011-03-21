@@ -46,6 +46,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Entities\Creeper.cs" />
+    <Compile Include="Entities\Drop.cs" />
+    <Compile Include="Entities\Mob.cs" />
+    <Compile Include="Entities\Slime.cs" />
+    <Compile Include="Items\ItemRegistry.cs" />
+    <Compile Include="Utilities\Point.cs" />
     <Content Include="administrators.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -92,6 +98,7 @@
     <Compile Include="Utilities\Base36.cs" />
     <Compile Include="Utilities\Logger.cs" />
     <Compile Include="Map\RegionFile.cs" />
+    <Compile Include="Packet\PlayerDiggingStatus.cs" />
     <Content Include="zlib.net.dll" />
   </ItemGroup>
   <ItemGroup>
