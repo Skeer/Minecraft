@@ -28,6 +28,7 @@ namespace Minecraft.Commands
             //         <id> = int or string (to be implemented later)
             if (client.Player.Inventory.Count >= 36)
             {
+                // Not the correct validator...
                 //Spawn item as if dropped
             }
             else

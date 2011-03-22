@@ -4,6 +4,7 @@ using Minecraft.Entities;
 using NBTLibrary;
 using Minecraft.Utilities;
 using NBTLibrary.Tags;
+using Minecraft.Net;
 
 namespace Minecraft.Map
 {
@@ -48,7 +49,7 @@ namespace Minecraft.Map
         public int X
         {
             get { return (int)Config["Level"]["xPos"].Payload; }
-            set { Config["Level"]["xPos"].Payload = value; } 
+            set { Config["Level"]["xPos"].Payload = value; }
         }
 
         /// <summary>
@@ -72,8 +73,44 @@ namespace Minecraft.Map
             List<Tag> entities = (List<Tag>)Config["Level"]["Entities"].Payload;
             foreach (Tag t in entities)
             {
-                Mob.Load(t);
+                switch (Entity.GetTypeFromTag(t))
+                {
+                    case "Mob":
+                        //var m = Mob.Load(MinecraftServer.Instance.Entity++, t);
+                        //Entities.Add(m);
+                        //MinecraftServer.Instance.Entities.Add(m.EID, m);
+                        break;
+                    case "Painting":
+                        Painting p = Painting.Load(MinecraftServer.Instance.Entity++, t);
+                        Entities.Add(p);
+                        MinecraftServer.Instance.Entities.Add(p.EID, p);
+                        break;
+                    default:
+                        break;
+                }
             }
+
+            List<Tag> tileEntities = (List<Tag>)Config["Level"]["TileEntities"].Payload;
+            foreach (Tag t in tileEntities)
+            {
+                switch (Entity.GetTypeFromTag(t))
+                {
+                    case "Sign":
+                        Sign s = Sign.Load(MinecraftServer.Instance.Entity++, t);
+                        Entities.Add(s);
+                        MinecraftServer.Instance.Entities.Add(s.EID, s);
+                        break;
+                    case "Chest":
+                        break;
+                    case "Furnace":
+                        break;
+                    case "MobSpawner":
+                        break;
+                    default:
+                        break;
+                }
+            }
+
         }
 
         public void Load(byte[] data)
@@ -100,7 +137,7 @@ namespace Minecraft.Map
 
         public byte GetBlockAt(int x, int y, int z)
         {
-            return Blocks[GetIndexFromCoords(x, y, z)]; 
+            return Blocks[GetIndexFromCoords(x, y, z)];
         }
 
         public void SetBlockAt(int x, int y, int z, byte block)

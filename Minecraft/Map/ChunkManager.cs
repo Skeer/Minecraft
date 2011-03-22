@@ -35,9 +35,9 @@ namespace Minecraft.Map
             return chunks;
         }
 
-        public Chunk GetChunkFromBlockCoords(int x, int z)
+        public Chunk GetChunkFromBlockCoords(double x, double z)
         {
-            return GetChunk((x - 1) / 16, (z - 1) / 16);
+            return GetChunk((int)UnitConverter.FromBlockCoordToChunkCoord(x), (int)UnitConverter.FromBlockCoordToChunkCoord(z));
         }
 
         /// <summary>

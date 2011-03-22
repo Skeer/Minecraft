@@ -267,5 +267,42 @@ namespace Minecraft.Packet
                 return stream.ToArray();
             }
         }
+
+        public static byte[] GetDestroyEntity(uint eid)
+        {
+            using (MinecraftPacketStream stream = new MinecraftPacketStream())
+            {
+                stream.WriteByte((byte)MinecraftOpcode.DestroyEntity);
+                stream.WriteUint(eid);
+                return stream.ToArray();
+            }
+        }
+
+        public static byte[] GetCollectItem(uint deid, uint peid)
+        {
+            using (MinecraftPacketStream stream = new MinecraftPacketStream())
+            {
+                stream.WriteByte((byte)MinecraftOpcode.CollectItem);
+                stream.WriteUint(deid);
+                stream.WriteUint(peid);
+                return stream.ToArray();
+            }
+        }
+
+        internal static byte[] GetUpdateSign(int x, short y, int z, string text1, string text2, string text3, string text4)
+        {
+            using (MinecraftPacketStream stream = new MinecraftPacketStream())
+            {
+                stream.WriteByte((byte)MinecraftOpcode.UpdateSign);
+                stream.WriteInt(x);
+                stream.WriteShort(y);
+                stream.WriteInt(z);
+                stream.WriteString(text1);
+                stream.WriteString(text2);
+                stream.WriteString(text3);
+                stream.WriteString(text4);
+                return stream.ToArray();
+            }
+        }
     }
 }

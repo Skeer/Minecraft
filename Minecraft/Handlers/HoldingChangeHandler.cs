@@ -11,7 +11,7 @@ namespace Minecraft.Handlers
         {
             if (stream.Length - stream.Position >= 2)
             {
-                client.Player.HoldingSlot = stream.ReadShort();
+                client.Player.HoldingSlot = (byte) stream.ReadShort();
                 byte key = (byte)(client.Player.HoldingSlot + 36);
                 if (client.Player.Inventory.ContainsKey(key))
                 {

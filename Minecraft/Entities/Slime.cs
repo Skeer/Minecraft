@@ -10,13 +10,14 @@ namespace Minecraft.Entities
     {
         Tag Data;
 
-        public static new Slime Load(Tag data)
+        public static new Slime Load(uint eid, Tag data)
         {
-            return new Slime(data);
+            return new Slime(eid, data);
         }
 
-        protected Slime(Tag data)
+        protected Slime(uint eid, Tag data)
         {
+            EID = eid;
             Data = data;
         }
 

@@ -10,13 +10,14 @@ namespace Minecraft.Entities
     {
         Tag Data;
 
-        public static new Creeper Load(Tag data)
+        public static new Creeper Load(uint eid, Tag data)
         {
-            return new Creeper(data);
+            return new Creeper(eid, data);
         }
 
-        protected  Creeper(Tag data)
+        protected  Creeper(uint eid, Tag data)
         {
+            EID = eid;
             Data = data;
         }
         

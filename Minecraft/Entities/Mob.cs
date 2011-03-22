@@ -8,14 +8,14 @@ namespace Minecraft.Entities
 {
     abstract class Mob : Entity
     {
-        public static Mob Load(Tag data)
+        public static Mob Load(uint eid, Tag data)
         {
             switch ((string)data["id"].Payload)
             {
                 case "Creeper":
-                    return Creeper.Load(data);
+                    return Creeper.Load(eid, data);
                 case "Slime":
-                    return Slime.Load(data);
+                    return Slime.Load(eid, data);
             }
             return null;
         }

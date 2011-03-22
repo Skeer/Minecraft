@@ -1,4 +1,5 @@
 ﻿using System;
+using NBTLibrary.Tags;
 
 namespace Minecraft.Entities
 {
@@ -23,6 +24,22 @@ namespace Minecraft.Entities
 
         // TODO: Height / Widths?
         // Refer to http://mc.kev009.com/Entities
-
+        public static string GetTypeFromTag(Tag t)
+        {
+            switch ((string)t["id"].Payload)
+            {
+                case "Slime":
+                case "Creeper":
+                case "Pig":
+                case "Squid":
+                case "Zombie":
+                case "Spider":
+                case "Skeleton":
+                case "Cow":
+                    return "Mob";
+                default:
+                    return (string)t["id"].Payload;
+            }
+        }
     }
 }

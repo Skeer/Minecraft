@@ -4,6 +4,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using Minecraft.Net;
+using Minecraft.Utilities;
 
 namespace Minecraft.Map
 {
@@ -43,8 +44,8 @@ namespace Minecraft.Map
 
         public static void ChunkCoordToRegionCoord(int cx, int cz, out int x, out int z)
         {
-            x = (int)Math.Floor((double)cx / XCoords);
-            z = (int)Math.Floor((double)cz / ZCoords);
+            x = (int)UnitConverter.FromChunkCoordToRegionCoord(cx);
+            z = (int)UnitConverter.FromChunkCoordToRegionCoord(cz);
         }
 
         void ReadHeader()
@@ -133,7 +134,7 @@ namespace Minecraft.Map
             {
                 if (Disposed != 0)
                     throw new ObjectDisposedException("RegionFile");
-                long pos = ChunkLocations[(cx - MinX) + (cz  - MinZ) * XCoords];
+                long pos = ChunkLocations[(cx - MinX) + (cz - MinZ) * XCoords];
                 if (pos < TotalChunks * 8)
                     return null;
                 byte[] buf = new byte[4];

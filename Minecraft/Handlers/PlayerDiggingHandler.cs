@@ -9,6 +9,7 @@ using Minecraft.Map;
 
 namespace Minecraft.Handlers
 {
+
     class PlayerDiggingHandler : IPacketHandler
     {
         public bool HandlePacket(MinecraftClient client, MinecraftPacketStream stream)
@@ -33,21 +34,25 @@ namespace Minecraft.Handlers
                     case PlayerDiggingStatus.Finished:
                         //REMOVE BLOCK
                         byte b = c.GetBlockAt(x, y, z);
-                        c.SetBlockAt(x, y, z, 0);
-                        Drop d = new Drop() {ID = b, EID = MinecraftServer.Instance.Entity++, X = x, Y = y, Z = z };
-                        c.Entities.Add(d);
-                        MinecraftServer.Instance.Entities.Add(d.EID, d);
-                        foreach (Player p in MinecraftServer.Instance.Players.Values)
+                        if (b != 0 || true)
                         {
-                            if (p.IsInRange(c.X, c.Z))
+                            c.SetBlockAt(x, y, z, 0);
+                            Random r = new Random();
+                            Drop d = new Drop() { ID = b, EID = MinecraftServer.Instance.Entity++, X = x + r.NextDouble(), Y = y + 1, Z = z + r.NextDouble() };
+                            c.Entities.Add(d);
+                            MinecraftServer.Instance.Entities.Add(d.EID, d);
+                            foreach (Player p in MinecraftServer.Instance.Players.Values)
                             {
-                                if (p != client.Player)
+                                if (p.IsInRange(c.X, c.Z))
                                 {
-                                    p.Client.Send(MinecraftPacketCreator.GetPlayerDigging(status, x, y, z, face));
+                                    if (p != client.Player)
+                                    {
+                                        p.Client.Send(MinecraftPacketCreator.GetPlayerDigging(status, x, y, z, face));
+                                    }
+                                    p.Client.Send(MinecraftPacketCreator.GetBlockChange(x, y, z, c.GetBlockAt(x, y, z), 0x00));
+                                    // explictly update players within range
+                                    p.Client.Player.Update();
                                 }
-                                p.Client.Send(MinecraftPacketCreator.GetBlockChange(x, y, z, c.GetBlockAt(x, y, z), 0x00));
-                                p.Client.Send(MinecraftPacketCreator.GetEntity(d.EID));
-                                p.Client.Send(MinecraftPacketCreator.GetPickupSpawn(d.EID, d.ID, 1, 0, (int)d.X, (int)d.Y, (int)d.Z, (byte)d.Yaw, (byte)d.Pitch, (byte)12));
                             }
                         }
                         break;
@@ -55,7 +60,7 @@ namespace Minecraft.Handlers
                         // Send packets to clients in range
                         foreach (Player p in MinecraftServer.Instance.Players.Values)
                         {
-                            if (p!=client.Player && p.IsInRange(c.X, c.Z))
+                            if (p != client.Player && p.IsInRange(c.X, c.Z))
                             {
                                 p.Client.Send(MinecraftPacketCreator.GetPlayerDigging(status, x, y, z, face));
                             }
