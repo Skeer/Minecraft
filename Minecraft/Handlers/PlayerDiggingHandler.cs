@@ -41,29 +41,27 @@ namespace Minecraft.Handlers
                             Drop d = new Drop() { ID = b, EID = MinecraftServer.Instance.Entity++, X = x + r.NextDouble(), Y = y + 1, Z = z + r.NextDouble() };
                             c.Entities.Add(d);
                             MinecraftServer.Instance.Entities.Add(d.EID, d);
-                            foreach (Player p in MinecraftServer.Instance.Players.Values)
+                            foreach (Player p in from p in MinecraftServer.Instance.Players.Values
+                                                 where p.IsInRange(c.Location.X, c.Location.Z)
+                                                 select p)
                             {
-                                if (p.IsInRange(c.X, c.Z))
+                                if (p != client.Player)
                                 {
-                                    if (p != client.Player)
-                                    {
-                                        p.Client.Send(MinecraftPacketCreator.GetPlayerDigging(status, x, y, z, face));
-                                    }
-                                    p.Client.Send(MinecraftPacketCreator.GetBlockChange(x, y, z, c.GetBlockAt(x, y, z), 0x00));
-                                    // explictly update players within range
-                                    p.Client.Player.Update();
+                                    p.Client.Send(MinecraftPacketCreator.GetPlayerDigging(status, x, y, z, face));
                                 }
+                                p.Client.Send(MinecraftPacketCreator.GetBlockChange(x, y, z, c.GetBlockAt(x, y, z), 0x00));
+                                // explictly update players within range
+                                p.Client.Player.Update();
                             }
                         }
                         break;
                     case PlayerDiggingStatus.Started:
                         // Send packets to clients in range
-                        foreach (Player p in MinecraftServer.Instance.Players.Values)
+                        foreach (Player p in from p in MinecraftServer.Instance.Players.Values
+                                             where p != client.Player && p.IsInRange(c.Location.X, c.Location.Z)
+                                             select p)
                         {
-                            if (p != client.Player && p.IsInRange(c.X, c.Z))
-                            {
-                                p.Client.Send(MinecraftPacketCreator.GetPlayerDigging(status, x, y, z, face));
-                            }
+                            p.Client.Send(MinecraftPacketCreator.GetPlayerDigging(status, x, y, z, face));
                         }
                         break;
                     case PlayerDiggingStatus.Dropped:

@@ -66,9 +66,9 @@ namespace Minecraft.Packet
             using (MinecraftPacketStream stream = new MinecraftPacketStream())
             {
                 stream.WriteByte((byte)MinecraftOpcode.MapChunk);
-                stream.WriteInt(c.X * 16);
+                stream.WriteInt(c.Location.X * 16);
                 stream.WriteShort(0);
-                stream.WriteInt(c.Z * 16);
+                stream.WriteInt(c.Location.Z * 16);
                 stream.WriteByte(15);
                 stream.WriteByte(127);
                 stream.WriteByte(15);
@@ -78,7 +78,7 @@ namespace Minecraft.Packet
                     using (ZOutputStream zStream = new ZOutputStream(mStream, zlibConst.Z_BEST_COMPRESSION))
                     {
                         zStream.Write(c.Blocks, 0, c.Blocks.Length);
-                        zStream.Write(c.Data, 0, c.Data.Length);
+                        zStream.Write(c.MetaData, 0, c.MetaData.Length);
                         zStream.Write(c.BlockLight, 0, c.BlockLight.Length);
                         zStream.Write(c.SkyLight, 0, c.SkyLight.Length);
                     }
@@ -301,6 +301,42 @@ namespace Minecraft.Packet
                 stream.WriteString(text2);
                 stream.WriteString(text3);
                 stream.WriteString(text4);
+                return stream.ToArray();
+            }
+        }
+
+        public static byte[] GetUseBed(uint eid, byte state, int x, byte y, int z)
+        {
+            using (MinecraftPacketStream stream = new MinecraftPacketStream())
+            {
+                stream.WriteByte((byte)MinecraftOpcode.UseBed);
+                stream.WriteUint(eid);
+                stream.WriteByte(state);
+                stream.WriteInt(x);
+                stream.WriteByte(y);
+                stream.WriteInt(z);
+                return stream.ToArray();
+            }
+        }
+
+        public static byte[] GetEntityAction(uint eid, MinecraftEntityAction action)
+        {
+            using (MinecraftPacketStream stream = new MinecraftPacketStream())
+            {
+                stream.WriteByte((byte)MinecraftOpcode.EntityAction);
+                stream.WriteUint(eid);
+                stream.WriteByte((byte)action);
+                return stream.ToArray();
+            }
+        }
+
+        public static byte[] GetAnimation(uint eid, MinecraftAnimation animation)
+        {
+            using (MinecraftPacketStream stream = new MinecraftPacketStream())
+            {
+                stream.WriteByte((byte)MinecraftOpcode.Animation);
+                stream.WriteUint(eid);
+                stream.WriteByte((byte)animation);
                 return stream.ToArray();
             }
         }

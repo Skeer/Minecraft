@@ -40,6 +40,10 @@ namespace Minecraft.Handlers
                                         {
                                             client.EID = MinecraftServer.Instance.Entity++;
                                             client.Send(MinecraftPacketCreator.GetLoginRequest(client.EID));
+                                            if (MinecraftServer.Instance.Players.ContainsKey(username.ToLower()))
+                                            {
+                                                MinecraftServer.Instance.Players[username.ToLower()].Client.Disconnect("You have logged in from somewhere else.");
+                                            }
                                             client.Load();
                                             return true;
                                         }
@@ -52,6 +56,10 @@ namespace Minecraft.Handlers
                                     {
                                         client.EID = MinecraftServer.Instance.Entity++;
                                         client.Send(MinecraftPacketCreator.GetLoginRequest(client.EID));
+                                        if (MinecraftServer.Instance.Players.ContainsKey(username.ToLower()))
+                                        {
+                                            MinecraftServer.Instance.Players[username.ToLower()].Client.Disconnect("You have logged in from somewhere else.");
+                                        }
                                         client.Load();
                                         return true;
                                     }

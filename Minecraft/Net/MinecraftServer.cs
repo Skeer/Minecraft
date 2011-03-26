@@ -125,6 +125,7 @@ namespace Minecraft.Net
         public CommandManager CommandManager { get; set; }
         public Dictionary<string, Player> Players = new Dictionary<string, Player>();
         public Dictionary<uint, Entity> Entities = new Dictionary<uint, Entity>();
+        public Dictionary<Point<int, byte, int>, uint> Beds = new Dictionary<Point<int, byte, int>, uint>(); // used beds
         public MinecraftAuthentication Authentication
         {
             get { return _Authentication; }
@@ -151,7 +152,7 @@ namespace Minecraft.Net
             CommandManager = new CommandManager();
             ChunkManager = new ChunkManager();
 
-            TimeTimer.Elapsed += new ElapsedEventHandler(TimeTimer_Elapsed);
+            TimeTimer.Elapsed += (sender, args) => Time += 20;
             TimeTimer.Start();
 
             //Socket
@@ -173,11 +174,6 @@ namespace Minecraft.Net
             {
                 Log.Error(e, "Unable to initialize socket server.");
             }
-        }
-
-        private void TimeTimer_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            Time += 20;
         }
 
         private void SessionLock()

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Minecraft.Packet;
 using Minecraft.Net;
+using Minecraft.Entities;
 
 namespace Minecraft.Handlers
 {
@@ -14,8 +15,13 @@ namespace Minecraft.Handlers
             if (stream.Length - stream.Position >= 5)
             {
                 uint eid = stream.ReadUint();
-                byte animate = stream.ReadByte();
-                //TODO
+                MinecraftAnimation animate = (MinecraftAnimation) stream.ReadByte();
+                foreach (Player p in from p in MinecraftServer.Instance.Players.Values
+                                     where p != client.Player && p.IsInRange(client.Player.CurrentChunk.Location.X, client.Player.CurrentChunk.Location.Z)
+                                     select p)
+                {
+                    p.Client.Send(MinecraftPacketCreator.GetAnimation(eid, animate));
+                }
                 return true;
 
             }

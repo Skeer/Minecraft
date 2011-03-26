@@ -28,7 +28,7 @@ namespace Minecraft.Map
             get { return (byte[])Config["Level"]["Blocks"].Payload; }
             set { Config["Level"]["Blocks"].Payload = value; }
         }
-        public byte[] Data
+        public byte[] MetaData
         {
             get { return (byte[])Config["Level"]["Data"].Payload; }
             set { Config["Level"]["Data"].Payload = value; }
@@ -43,32 +43,19 @@ namespace Minecraft.Map
             get { return (byte[])Config["Level"]["SkyLight"].Payload; }
             set { Config["Level"]["SkyLight"].Payload = value; }
         }
-        /// <summary>
-        /// In chunks (16 blocks).
-        /// </summary>
-        public int X
-        {
-            get { return (int)Config["Level"]["xPos"].Payload; }
-            set { Config["Level"]["xPos"].Payload = value; }
-        }
-
-        /// <summary>
-        /// In chunks (16 blocks).
-        /// </summary>
-        public int Z
-        {
-            get { return (int)Config["Level"]["zPos"].Payload; }
-            set { Config["Level"]["zPos"].Payload = value; }
-        }
         public long LastUpdate { get; set; }
         public List<Entity> Entities = new List<Entity>();
         public List<Entity> TileEntities = new List<Entity>();
         private RegionFile Region;
+        public readonly Point<int, int, int> Location;
 
         public Chunk(RegionFile region, byte[] data)
         {
             Region = region;
             Load(data);
+
+            //x, y positions
+            Location = new Point<int, int, int>() { X = (int)Config["Level"]["xPos"].Payload, Z = (int)Config["Level"]["zPos"].Payload };
 
             List<Tag> entities = (List<Tag>)Config["Level"]["Entities"].Payload;
             foreach (Tag t in entities)
@@ -127,17 +114,21 @@ namespace Minecraft.Map
 
         public void Save()
         {
-            Region.SetChunkData(X, Z, Config.GetBytes(), DateTime.Now.Ticks);
+            Region.SetChunkData(Location.X, Location.Z, Config.GetBytes(), DateTime.Now.Ticks);
         }
 
         public override string ToString()
         {
-            return "(" + X + ", " + Z + ")";
+            return "(" + Location.X + ", " + Location.Z + ")";
         }
 
         public byte GetBlockAt(int x, int y, int z)
         {
             return Blocks[GetIndexFromCoords(x, y, z)];
+        }
+        public byte GetMetaDataAt(int x, int y, int z)
+        {
+            return MetaData[GetIndexFromCoords(x, y, z) / 2];
         }
 
         public void SetBlockAt(int x, int y, int z, byte block)

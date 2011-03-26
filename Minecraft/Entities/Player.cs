@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using Minecraft.Items;
@@ -16,6 +17,7 @@ namespace Minecraft.Entities
     {
         private List<Chunk> LoadedChunks = new List<Chunk>();
         private List<Entity> LoadedEntites = new List<Entity>();
+        Dictionary<Point<int, byte, int>, uint> LoadedBeds = new Dictionary<Point<int, byte, int>, uint>();
         private NBTFile Data;
 
         public bool OnGround
@@ -318,7 +320,7 @@ namespace Minecraft.Entities
         /// <returns></returns>
         public bool IsInRange(int x, int z)
         {
-            if (Math.Abs(CurrentChunk.X - x) + Math.Abs(CurrentChunk.Z - z) < 8)
+            if (Math.Abs(CurrentChunk.Location.X - x) + Math.Abs(CurrentChunk.Location.Z - z) < 8)
             {
                 return true;
             }
@@ -334,11 +336,11 @@ namespace Minecraft.Entities
 
         public void Save()
         {
-            SyncInventory();
+            WriteInventory();
             Data.Save();
         }
 
-        private void SyncInventory()
+        private void WriteInventory()
         {
             List<Tag> inventoryPayload = new List<Tag>();
 
@@ -395,26 +397,24 @@ namespace Minecraft.Entities
             {
                 // load new chunks
                 List<Chunk> chunks = MinecraftServer.Instance.ChunkManager.GetChunks((int)X / 16, (int)Z / 16);
-                foreach (Chunk c in LoadedChunks)
+                foreach (Chunk c in from c in LoadedChunks
+                                    where !chunks.Contains(c)
+                                    select c)
                 {
-                    if (!chunks.Contains(c))
-                    {
-                        // Unload chunks
-                        Client.Send(MinecraftPacketCreator.GetPreChunk(c.X, c.Z, false));
-                    }
+                    // Unload chunks
+                    Client.Send(MinecraftPacketCreator.GetPreChunk(c.Location.X, c.Location.Z, false));
                 }
 
-                foreach (Chunk c in chunks)
+                foreach (Chunk c in from c in chunks
+                                    where !LoadedChunks.Contains(c)
+                                    select c)
                 {
                     // NOTE: Probably be better to not pass the whole chunk........
-                    if (!LoadedChunks.Contains(c))
+                    Client.Send(MinecraftPacketCreator.GetPreChunk(c.Location.X, c.Location.Z, true));
+                    Client.Send(MinecraftPacketCreator.GetMapChunk(c));
+                    foreach (Entity e in c.TileEntities)
                     {
-                        Client.Send(MinecraftPacketCreator.GetPreChunk(c.X, c.Z, true));
-                        Client.Send(MinecraftPacketCreator.GetMapChunk(c));
-                        foreach (Entity e in c.TileEntities)
-                        {
 
-                        }
                     }
                 }
 
@@ -422,156 +422,83 @@ namespace Minecraft.Entities
                 CurrentChunk = currentChunk;
             }
 
+            var entities = from e in MinecraftServer.Instance.Entities.Values
+                           where e != this && IsInRange((int)UnitConverter.FromBlockCoordToChunkCoord(e.X), (int)UnitConverter.FromBlockCoordToChunkCoord(e.Z))
+                           select e;
 
-            //verify cache...
-
-
-            //TODO: This section is truely flawed... Fix
-            //List<Player> players = new List<Player>();
-            //foreach (Player p in MinecraftServer.Instance.Players.Values)
+            //List<Entity> entities = new List<Entity>();
+            //foreach (Entity e in MinecraftServer.Instance.Entities.Values)
             //{
-            //    if (p != this && p.IsInRange(CurrentChunk.X, CurrentChunk.Z))
+            //    if (e != this && IsInRange((int)UnitConverter.FromBlockCoordToChunkCoord(e.X), (int)UnitConverter.FromBlockCoordToChunkCoord(e.Z)))
             //    {
-            //        players.Add(p);
+            //        // gathering entities in range
+            //        entities.Add(e);
             //    }
             //}
 
-            //short currentItemID = 0;
-            //short currentItemDamage = 0;
-            //byte key = (byte)(HoldingSlot + 36);
-            //if (Inventory.ContainsKey(key))
-            //{
-            //    currentItemID = Inventory[key].ID;
-            //    currentItemDamage = Inventory[key].Damage;
-            //}
+            foreach (Entity e in from l in LoadedEntites
+                                 where !entities.Contains(l)
+                                 select l)
+            {        // unloading entities
+                Client.Send(MinecraftPacketCreator.GetDestroyEntity(e.EID));
+            }
 
-            //foreach (Player p in players)
-            //{
-            //    if (!LoadedPlayers.Contains(p))
-            //    {
-            //        p.Client.Send(MinecraftPacketCreator.GetNamedEntitySpawn(EID, Username, (int)(X * 32), (int)(Y * 32), (int)(Z * 32), (byte)Yaw, (byte)Pitch, currentItemID));
-            //        for (byte b = 5; b <= 8; ++b)
-            //        {
-            //            if (Inventory.ContainsKey(b))
-            //            {
-            //                Item i = Inventory[b];
-            //                p.Client.Send(MinecraftPacketCreator.GetEntityEquipment(EID, (short)(b - 4), i.ID, i.Damage));
-            //            }
-            //            else
-            //            {
-            //                p.Client.Send(MinecraftPacketCreator.GetEntityEquipment(EID, (short)(b - 4), -1, 0));
-            //            }
-            //        }
-            //        p.Client.Send(MinecraftPacketCreator.GetEntityEquipment(EID, 0, currentItemID, currentItemDamage));
 
-            //        if (!p.LoadedPlayers.Contains(this))
-            //        {
-            //            p.Update();
-            //            short pCurrentItemID = 0;
-            //            short pCurrentItemDamage = 0;
-            //            byte pKey = (byte)(p.HoldingSlot + 36);
-            //            if (p.Inventory.ContainsKey(pKey))
-            //            {
-            //                pCurrentItemID = p.Inventory[pKey].ID;
-            //                pCurrentItemDamage = p.Inventory[pKey].Damage;
-            //            }
-            //            Client.Send(MinecraftPacketCreator.GetNamedEntitySpawn(p.EID, p.Username, (int)(p.X * 32), (int)(p.Y * 32), (int)(p.Z * 32), (byte)p.Yaw, (byte)p.Pitch, pCurrentItemID));
-
-            //            for (byte b = 5; b <= 8; ++b)
-            //            {
-            //                if (p.Inventory.ContainsKey(b))
-            //                {
-            //                    Item i = p.Inventory[b];
-            //                    Client.Send(MinecraftPacketCreator.GetEntityEquipment(p.EID, (short)(b - 4), i.ID, i.Damage));
-            //                }
-            //                else
-            //                {
-            //                    Client.Send(MinecraftPacketCreator.GetEntityEquipment(p.EID, (short)(b - 4), -1, 0));
-            //                }
-            //            }
-            //            Client.Send(MinecraftPacketCreator.GetEntityEquipment(p.EID, 0, pCurrentItemID, pCurrentItemDamage));
-            //            p.LoadedPlayers.Add(this);
-            //        }
-            //    }
-            //}
-
-            //LoadedPlayers = players;
-
-            List<Entity> entities = new List<Entity>();
-            foreach (Entity e in MinecraftServer.Instance.Entities.Values)
+            foreach (Entity e in from e in entities
+                                 where !LoadedEntites.Contains(e)
+                                 select e)
             {
-                if (e != this && IsInRange((int)UnitConverter.FromBlockCoordToChunkCoord(e.X), (int)UnitConverter.FromBlockCoordToChunkCoord(e.Z)))
+                // loading new entities
+                switch (e.GetType().Name)
                 {
-                    // gathering entities in range
-                    entities.Add(e);
+                    case "Player":
+                        // loading new players
+                        Player p = (Player)e;
+                        short currentItemID = 0;
+                        short currentItemDamage = 0;
+                        byte key = (byte)(p.HoldingSlot + 36);
+                        if (p.Inventory.ContainsKey(key))
+                        {
+                            currentItemID = p.Inventory[key].ID;
+                            currentItemDamage = p.Inventory[key].Damage;
+                        }
+                        Client.Send(MinecraftPacketCreator.GetNamedEntitySpawn(p.EID, p.Username, (int)(p.X * 32), (int)(p.Y * 32), (int)(p.Z * 32), (byte)p.Yaw, (byte)p.Pitch, currentItemID));
+                        for (byte b = 5; b <= 8; ++b)
+                        {
+                            if (p.Inventory.ContainsKey(b))
+                            {
+                                Item i = p.Inventory[b];
+                                Client.Send(MinecraftPacketCreator.GetEntityEquipment(p.EID, (short)(b - 4), i.ID, i.Damage));
+                            }
+                            else
+                            {
+                                Client.Send(MinecraftPacketCreator.GetEntityEquipment(p.EID, (short)(b - 4), -1, 0));
+                            }
+                        }
+                        Client.Send(MinecraftPacketCreator.GetEntityEquipment(p.EID, 0, currentItemID, currentItemDamage));
+
+                        if (!p.LoadedEntites.Contains(this))
+                        {
+                            //remind other client to update
+                            p.Update();
+                        }
+                        break;
+                    case "Mob":
+                        // TODO: loading new mobs
+                        break;
+                    case "Drop":
+                        // loading new (drop) item
+                        Drop d = (Drop)e;
+                        Client.Send(MinecraftPacketCreator.GetPickupSpawn(d.EID, d.ID, 1, 0, (int)(d.X * 32), (int)(d.Y * 32), (int)(d.Z * 32), (byte)d.Yaw, (byte)d.Pitch, (byte)0));
+                        break;
+                    case "Sign":
+                        Sign s = (Sign)e;
+                        Client.Send(MinecraftPacketCreator.GetUpdateSign((int)s.X, (short)s.Y, (int)s.Z, s.Text1, s.Text2, s.Text3, s.Text4));
+                        break;
                 }
             }
 
-            foreach (Entity e in LoadedEntites)
-            {
-                if (!entities.Contains(e))
-                {
-                    // unloading entities
-                    Client.Send(MinecraftPacketCreator.GetDestroyEntity(e.EID));
-                }
-            }
-
-            foreach (Entity e in entities)
-            {
-                if (!LoadedEntites.Contains(e))
-                {
-                    // loading new entities
-                    switch (e.GetType().Name)
-                    {
-                        case "Player":
-                            // loading new players
-                            Player p = (Player)e;
-                            short currentItemID = 0;
-                            short currentItemDamage = 0;
-                            byte key = (byte)(p.HoldingSlot + 36);
-                            if (p.Inventory.ContainsKey(key))
-                            {
-                                currentItemID = p.Inventory[key].ID;
-                                currentItemDamage = p.Inventory[key].Damage;
-                            }
-                            Client.Send(MinecraftPacketCreator.GetNamedEntitySpawn(p.EID, p.Username, (int)(p.X * 32), (int)(p.Y * 32), (int)(p.Z * 32), (byte)p.Yaw, (byte)p.Pitch, currentItemID));
-                            for (byte b = 5; b <= 8; ++b)
-                            {
-                                if (p.Inventory.ContainsKey(b))
-                                {
-                                    Item i = p.Inventory[b];
-                                    Client.Send(MinecraftPacketCreator.GetEntityEquipment(p.EID, (short)(b - 4), i.ID, i.Damage));
-                                }
-                                else
-                                {
-                                    Client.Send(MinecraftPacketCreator.GetEntityEquipment(p.EID, (short)(b - 4), -1, 0));
-                                }
-                            }
-                            Client.Send(MinecraftPacketCreator.GetEntityEquipment(p.EID, 0, currentItemID, currentItemDamage));
-
-                            if (!p.LoadedEntites.Contains(this))
-                            {
-                                //remind other client to update
-                                p.Update();
-                            }
-                            break;
-                        case "Mob":
-                            // TODO: loading new mobs
-                            break;
-                        case "Drop":
-                            // loading new (drop) item
-                            Drop d = (Drop)e;
-                            Client.Send(MinecraftPacketCreator.GetPickupSpawn(d.EID, d.ID, 1, 0, (int)(d.X * 32), (int)(d.Y * 32), (int)(d.Z * 32), (byte)d.Yaw, (byte)d.Pitch, (byte)0));
-                            break;
-                        case "Sign":
-                            Sign s = (Sign)e;
-                            Client.Send(MinecraftPacketCreator.GetUpdateSign((int)s.X, (short)s.Y, (int)s.Z, s.Text1, s.Text2, s.Text3, s.Text4));
-                            break;
-                    }
-                }
-            }
-
-            LoadedEntites = entities;
+            LoadedEntites = entities.ToList();
 
             foreach (Entity e in LoadedEntites)
             {
@@ -587,14 +514,13 @@ namespace Minecraft.Entities
                         MinecraftServer.Instance.Entities.Remove(d.EID);
 
                         //Pickup
-                        foreach (Player p in MinecraftServer.Instance.Players.Values)
+                        foreach (Player p in from p in MinecraftServer.Instance.Players.Values
+                                             where p.IsInRange(c.Location.X, c.Location.Z)
+                                             select p)
                         {
-                            if (p.IsInRange(c.X, c.Z))
-                            {
-                                Client.Send(MinecraftPacketCreator.GetCollectItem(d.EID, EID));
-                                p.Update();
-                                // Safety :D
-                            }
+                            Client.Send(MinecraftPacketCreator.GetCollectItem(d.EID, EID));
+                            p.Update();
+                            // Safety :D
                         }
 
                         // Inventory
@@ -607,10 +533,25 @@ namespace Minecraft.Entities
                         {
                             Inventory.Add(slot, new Item() { ID = d.ID, Count = 1, Slot = slot, Damage = d.Damage, Uses = d.Uses });
                         }
-                        Client.Send(MinecraftPacketCreator.GetSetSlot(0, slot, Inventory[slot].ID, Inventory[slot].Count, Inventory[slot].Uses)); 
+                        Client.Send(MinecraftPacketCreator.GetSetSlot(0, slot, Inventory[slot].ID, Inventory[slot].Count, Inventory[slot].Uses));
                     }
                 }
             }
+
+            var beds = from b in MinecraftServer.Instance.Beds
+                       where b.Value != EID && IsInRange((int)UnitConverter.FromBlockCoordToChunkCoord(b.Key.X), (int)UnitConverter.FromBlockCoordToChunkCoord(b.Key.Z))
+                       where !LoadedBeds.Contains(b)
+                       select b;
+
+            foreach (KeyValuePair<Point<int, byte, int>, uint> pair in beds)
+            {
+                //maybe check through value?
+                Client.Send(MinecraftPacketCreator.GetUseBed(pair.Value, 0, pair.Key.X, pair.Key.Y, pair.Key.Z));
+            }
+
+            // No unloading beds apparently...
+
+            LoadedBeds = beds.ToDictionary(b => b.Key, b => b.Value);
         }
 
         private bool CanPickUp(Drop d, out byte slot)

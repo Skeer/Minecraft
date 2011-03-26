@@ -46,13 +46,19 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Commands\Time.cs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Compile Include="Entities\Creeper.cs" />
     <Compile Include="Entities\Drop.cs" />
     <Compile Include="Entities\Mob.cs" />
     <Compile Include="Entities\Painting.cs" />
     <Compile Include="Entities\Sign.cs" />
     <Compile Include="Entities\Slime.cs" />
+    <Compile Include="Handlers\EntityActionHandler.cs" />
     <Compile Include="Items\ItemRegistry.cs" />
+    <Compile Include="Packet\MinecraftAnimation.cs" />
+    <Compile Include="Packet\MinecraftEntityAction.cs" />
     <Compile Include="Utilities\Point.cs" />
     <Compile Include="Utilities\UnitConverter.cs" />
     <Content Include="administrators.txt">

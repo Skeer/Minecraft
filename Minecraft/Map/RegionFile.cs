@@ -13,7 +13,7 @@ namespace Minecraft.Map
         public const int XCoords = 32;
         public const int ZCoords = 32;
         public const int TotalChunks = XCoords * ZCoords;
-        public readonly int X, Z;
+        public readonly Point<int, int, int> Location;
         public readonly int MinX, MaxX;
         public readonly int MinZ, MaxZ;
         readonly FileStream Stream;
@@ -27,8 +27,7 @@ namespace Minecraft.Map
 
         public RegionFile(int x, int z, string fileName)
         {
-            this.X = x;
-            this.Z = z;
+            Location = new Point<int, int, int>() { X = x, Z = z };
             MinX = x * XCoords;
             MinZ = z * ZCoords;
             MaxX = x * XCoords + XCoords - 1;
@@ -40,12 +39,6 @@ namespace Minecraft.Map
         public RegionFile(int x, int z)
             : this(x, z, Path.Combine(MinecraftServer.Instance.Path, "region", "r." + x.ToString() + "." + z.ToString() + ".mcr"))
         {
-        }
-
-        public static void ChunkCoordToRegionCoord(int cx, int cz, out int x, out int z)
-        {
-            x = (int)UnitConverter.FromChunkCoordToRegionCoord(cx);
-            z = (int)UnitConverter.FromChunkCoordToRegionCoord(cz);
         }
 
         void ReadHeader()
@@ -277,11 +270,11 @@ namespace Minecraft.Map
 
         public bool Equals(RegionFile other)
         {
-            return other != null && other.X == X && other.Z == Z;
+            return other != null && other.Location.X == Location.X && other.Location.Z == Location.Z;
         }
         public override int GetHashCode()
         {
-            return X * XCoords + Z;
+            return Location.X * XCoords + Location.Z;
         }
     }
 }

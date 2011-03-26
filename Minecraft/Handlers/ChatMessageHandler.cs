@@ -22,6 +22,10 @@ namespace Minecraft.Handlers
                         {
                             MinecraftServer.Instance.CommandManager.RunCommand(client, splitted[0].ToLower(), splitted);
                         }
+                        else if (splitted[0].ToLower() == "reload")
+                        {
+                            MinecraftServer.Instance.CommandManager.ReloadCommands();
+                        }
                         else if (splitted[0].ToLower() == "help")
                         {
                             client.Send(MinecraftPacketCreator.GetChatMessage("Availiable commands are:"));
@@ -29,6 +33,7 @@ namespace Minecraft.Handlers
                             {
                                 client.Send(MinecraftPacketCreator.GetChatMessage(key));
                             }
+                            client.Send(MinecraftPacketCreator.GetChatMessage("reload"));
                         }
                         else
                         {
